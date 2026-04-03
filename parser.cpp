@@ -853,7 +853,7 @@ namespace VSOP {
   const signed char
   Parser::yyrline_[] =
   {
-       0,   123,   123
+       0,   119,   119
   };
 
   void
@@ -888,7 +888,7 @@ namespace VSOP {
 } // VSOP
 #line 890 "parser.cpp"
 
-#line 125 "parser.y"
+#line 121 "parser.y"
 
 // User code
 void VSOP::Parser::error(const location_type& l, const std::string& m)
