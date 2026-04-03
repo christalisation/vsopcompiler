@@ -44,6 +44,7 @@
 
     // Global variable used to track the comment nesting level.
     int comment_depth = 0;
+    position comment_start;
 
     // Global variables used for strings
     std::string string_buffer;
@@ -58,7 +59,7 @@ t_id            [A-Z][a-zA-Z_0-9]*
 o_id            [a-z][a-zA-Z_0-9]*
 hexa_int        0x[0-9a-fA-F]+
 bad_hexa_suffix 0x[0-9a-fA-F]+[a-zA-Z_][a-zA-Z0-9_]*
-bad_hexa        0x[0-9a-fA-F]*
+bad_hexa        0x
 bad_int         [0-9]+[a-zA-Z_][a-zA-Z0-9_]*
 int             [0-9]+
 blank           [ \t\r\f]
@@ -74,7 +75,7 @@ line_comment    "//"[^\n]*
     /* Multi-line comments */
 
         /* Enter in comment */
-"(*"        { BEGIN(IN_COMMENT); comment_depth = 1;}
+"(*"        { BEGIN(IN_COMMENT); comment_depth = 1; comment_start = loc.begin; }
 
         /* Inside comment */
 <IN_COMMENT>"(*" { comment_depth++; }
@@ -83,7 +84,7 @@ line_comment    "//"[^\n]*
                         BEGIN(INITIAL); }
 <IN_COMMENT>\n   { loc.lines(1);loc.step(); }
 <IN_COMMENT>.    { loc.step(); }
-<IN_COMMENT><<EOF>> { print_error(loc.begin, "unterminated comment");
+<IN_COMMENT><<EOF>> { print_error(comment_start, "unterminated comment");
                       BEGIN(INITIAL);
                       return Parser::make_YYerror(loc); }
 
@@ -155,12 +156,12 @@ line_comment    "//"[^\n]*
 \"          { string_buffer = "\"" ; string_start = loc.begin; BEGIN(IN_STRING); }
 
         /* Special characters */
-<IN_STRING>\\b     { string_buffer += "\\x08"; }
-<IN_STRING>\\t     { string_buffer += "\\x09"; }
-<IN_STRING>\\n     { string_buffer += "\\x0a"; }
-<IN_STRING>\\r     { string_buffer += "\\x0d"; }
-<IN_STRING>\\\"    { string_buffer += "\\x22"; }
-<IN_STRING>\\\\    { string_buffer += "\\x5c"; }
+<IN_STRING>\\b     { loc.step(); string_buffer += "\\x08"; }
+<IN_STRING>\\t     { loc.step(); string_buffer += "\\x09"; }
+<IN_STRING>\\n     { loc.step(); string_buffer += "\\x0a"; }
+<IN_STRING>\\r     { loc.step(); string_buffer += "\\x0d"; }
+<IN_STRING>\\\"    { loc.step(); string_buffer += "\\x22"; }
+<IN_STRING>\\\\    { loc.step(); string_buffer += "\\x5c"; }
 
         /* \xhh hex escape */
 <IN_STRING>\\x[0-9a-fA-F]{2} {
@@ -188,7 +189,7 @@ line_comment    "//"[^\n]*
                       return Parser::make_YYerror(loc); }
 
         /* Any other character */
-<IN_STRING>.  { string_buffer += yytext[0]; }
+<IN_STRING>.  { loc.step(); string_buffer += yytext[0]; }
 
     /* Invalid characters */
 .           {

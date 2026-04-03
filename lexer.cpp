@@ -594,15 +594,16 @@ char *yytext;
 
     // Global variable used to track the comment nesting level.
     int comment_depth = 0;
+    position comment_start;
 
     // Global variables used for strings
     std::string string_buffer;
     position string_start;
-#line 602 "lexer.cpp"
+#line 603 "lexer.cpp"
 
-#line 57 "lexer.lex"
+#line 58 "lexer.lex"
     /* Definitions */
-#line 606 "lexer.cpp"
+#line 607 "lexer.cpp"
 
 #define INITIAL 0
 #define IN_COMMENT 1
@@ -819,7 +820,7 @@ YY_DECL
 		}
 
 	{
-#line 68 "lexer.lex"
+#line 69 "lexer.lex"
 
 
     // Code run each time yylex is called.
@@ -830,7 +831,7 @@ YY_DECL
     /* Multi-line comments */
 
         /* Enter in comment */
-#line 834 "lexer.cpp"
+#line 835 "lexer.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -885,18 +886,18 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 78 "lexer.lex"
-{ BEGIN(IN_COMMENT); comment_depth = 1;}
+#line 79 "lexer.lex"
+{ BEGIN(IN_COMMENT); comment_depth = 1; comment_start = loc.begin; }
 	YY_BREAK
 /* Inside comment */
 case 2:
 YY_RULE_SETUP
-#line 81 "lexer.lex"
+#line 82 "lexer.lex"
 { comment_depth++; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 82 "lexer.lex"
+#line 83 "lexer.lex"
 { comment_depth--; 
                     if (comment_depth == 0) 
                         BEGIN(INITIAL); }
@@ -904,307 +905,307 @@ YY_RULE_SETUP
 case 4:
 /* rule 4 can match eol */
 YY_RULE_SETUP
-#line 85 "lexer.lex"
+#line 86 "lexer.lex"
 { loc.lines(1);loc.step(); }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 86 "lexer.lex"
+#line 87 "lexer.lex"
 { loc.step(); }
 	YY_BREAK
 case YY_STATE_EOF(IN_COMMENT):
-#line 87 "lexer.lex"
-{ print_error(loc.begin, "unterminated comment");
+#line 88 "lexer.lex"
+{ print_error(comment_start, "unterminated comment");
                       BEGIN(INITIAL);
                       return Parser::make_YYerror(loc); }
 	YY_BREAK
 /* White spaces */
 case 6:
 YY_RULE_SETUP
-#line 92 "lexer.lex"
+#line 93 "lexer.lex"
 loc.step();
 	YY_BREAK
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 93 "lexer.lex"
+#line 94 "lexer.lex"
 loc.lines(yyleng); loc.step();
 	YY_BREAK
 /* Single-line comments */
 case 8:
 YY_RULE_SETUP
-#line 96 "lexer.lex"
+#line 97 "lexer.lex"
 loc.step();
 	YY_BREAK
 /* Operators */
 case 9:
 YY_RULE_SETUP
-#line 99 "lexer.lex"
+#line 100 "lexer.lex"
 return Parser::make_LBRACE(loc);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 100 "lexer.lex"
+#line 101 "lexer.lex"
 return Parser::make_RBRACE(loc);
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 101 "lexer.lex"
+#line 102 "lexer.lex"
 return Parser::make_LPAR(loc);
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 102 "lexer.lex"
+#line 103 "lexer.lex"
 return Parser::make_RPAR(loc);
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 103 "lexer.lex"
+#line 104 "lexer.lex"
 return Parser::make_COLON(loc);
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 104 "lexer.lex"
+#line 105 "lexer.lex"
 return Parser::make_SEMICOLON(loc);
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 105 "lexer.lex"
+#line 106 "lexer.lex"
 return Parser::make_COMMA(loc);
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 106 "lexer.lex"
+#line 107 "lexer.lex"
 return Parser::make_PLUS(loc);
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 107 "lexer.lex"
+#line 108 "lexer.lex"
 return Parser::make_MINUS(loc);
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 108 "lexer.lex"
+#line 109 "lexer.lex"
 return Parser::make_TIMES(loc);
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 109 "lexer.lex"
+#line 110 "lexer.lex"
 return Parser::make_DIV(loc);
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 110 "lexer.lex"
+#line 111 "lexer.lex"
 return Parser::make_POW(loc);
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 111 "lexer.lex"
+#line 112 "lexer.lex"
 return Parser::make_DOT(loc);
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 112 "lexer.lex"
+#line 113 "lexer.lex"
 return Parser::make_EQUAL(loc);
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 113 "lexer.lex"
+#line 114 "lexer.lex"
 return Parser::make_LOWER_EQUAL(loc);
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 114 "lexer.lex"
+#line 115 "lexer.lex"
 return Parser::make_ASSIGN(loc);
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 115 "lexer.lex"
+#line 116 "lexer.lex"
 return Parser::make_LOWER(loc);
 	YY_BREAK
 /* Keywords */
 case 26:
 YY_RULE_SETUP
-#line 118 "lexer.lex"
+#line 119 "lexer.lex"
 return Parser::make_AND(loc);
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 119 "lexer.lex"
+#line 120 "lexer.lex"
 return Parser::make_BOOL(loc);
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 120 "lexer.lex"
+#line 121 "lexer.lex"
 return Parser::make_CLASS(loc);
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 121 "lexer.lex"
+#line 122 "lexer.lex"
 return Parser::make_DO(loc);
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 122 "lexer.lex"
+#line 123 "lexer.lex"
 return Parser::make_ELSE(loc);
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 123 "lexer.lex"
+#line 124 "lexer.lex"
 return Parser::make_EXTENDS(loc);
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 124 "lexer.lex"
+#line 125 "lexer.lex"
 return Parser::make_FALSE(loc);
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 125 "lexer.lex"
+#line 126 "lexer.lex"
 return Parser::make_IF(loc);
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 126 "lexer.lex"
+#line 127 "lexer.lex"
 return Parser::make_IN(loc);
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 127 "lexer.lex"
+#line 128 "lexer.lex"
 return Parser::make_INT32(loc);
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 128 "lexer.lex"
+#line 129 "lexer.lex"
 return Parser::make_ISNULL(loc);
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 129 "lexer.lex"
+#line 130 "lexer.lex"
 return Parser::make_LET(loc);
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 130 "lexer.lex"
+#line 131 "lexer.lex"
 return Parser::make_NEW(loc);
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 131 "lexer.lex"
+#line 132 "lexer.lex"
 return Parser::make_NOT(loc);
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 132 "lexer.lex"
+#line 133 "lexer.lex"
 return Parser::make_SELF(loc);
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 133 "lexer.lex"
+#line 134 "lexer.lex"
 return Parser::make_STRING(loc);
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 134 "lexer.lex"
+#line 135 "lexer.lex"
 return Parser::make_THEN(loc);
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 135 "lexer.lex"
+#line 136 "lexer.lex"
 return Parser::make_TRUE(loc);
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 136 "lexer.lex"
+#line 137 "lexer.lex"
 return Parser::make_UNIT(loc);
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 137 "lexer.lex"
+#line 138 "lexer.lex"
 return Parser::make_WHILE(loc);
 	YY_BREAK
 /* Identifiers */
 case 46:
 YY_RULE_SETUP
-#line 140 "lexer.lex"
+#line 141 "lexer.lex"
 return Parser::make_TYPE_ID(std::string(yytext), loc);
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 141 "lexer.lex"
+#line 142 "lexer.lex"
 return Parser::make_OBJECT_ID(std::string(yytext), loc);
 	YY_BREAK
 /* Integer literals */
 case 48:
 YY_RULE_SETUP
-#line 144 "lexer.lex"
+#line 145 "lexer.lex"
 { print_error(loc.begin, "invalid integer literal: " + string(yytext)); 
                     return Parser::make_YYerror(loc); }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 146 "lexer.lex"
+#line 147 "lexer.lex"
 { return Parser::make_INTEGER_LITERAL(stoi(yytext, nullptr, 16), loc); }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 147 "lexer.lex"
+#line 148 "lexer.lex"
 { print_error(loc.begin, "invalid integer literal: " + string(yytext)); 
                     return Parser::make_YYerror(loc); }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 149 "lexer.lex"
+#line 150 "lexer.lex"
 { print_error(loc.begin, "invalid integer literal: " + string(yytext)); 
                     return Parser::make_YYerror(loc); }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 151 "lexer.lex"
+#line 152 "lexer.lex"
 { return Parser::make_INTEGER_LITERAL(stoi(yytext), loc); }
 	YY_BREAK
 /* String literals */
 /* Enter in string */
 case 53:
 YY_RULE_SETUP
-#line 156 "lexer.lex"
+#line 157 "lexer.lex"
 { string_buffer = "\"" ; string_start = loc.begin; BEGIN(IN_STRING); }
 	YY_BREAK
 /* Special characters */
 case 54:
 YY_RULE_SETUP
-#line 159 "lexer.lex"
-{ string_buffer += "\\x08"; }
+#line 160 "lexer.lex"
+{ loc.step(); string_buffer += "\\x08"; }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 160 "lexer.lex"
-{ string_buffer += "\\x09"; }
+#line 161 "lexer.lex"
+{ loc.step(); string_buffer += "\\x09"; }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 161 "lexer.lex"
-{ string_buffer += "\\x0a"; }
+#line 162 "lexer.lex"
+{ loc.step(); string_buffer += "\\x0a"; }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 162 "lexer.lex"
-{ string_buffer += "\\x0d"; }
+#line 163 "lexer.lex"
+{ loc.step(); string_buffer += "\\x0d"; }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 163 "lexer.lex"
-{ string_buffer += "\\x22"; }
+#line 164 "lexer.lex"
+{ loc.step(); string_buffer += "\\x22"; }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 164 "lexer.lex"
-{ string_buffer += "\\x5c"; }
+#line 165 "lexer.lex"
+{ loc.step(); string_buffer += "\\x5c"; }
 	YY_BREAK
 /* \xhh hex escape */
 case 60:
 YY_RULE_SETUP
-#line 167 "lexer.lex"
+#line 168 "lexer.lex"
 {
         int val = stoi(string(yytext + 2), nullptr, 16);
     char buffer[8];
@@ -1216,14 +1217,14 @@ YY_RULE_SETUP
 case 61:
 /* rule 61 can match eol */
 YY_RULE_SETUP
-#line 174 "lexer.lex"
+#line 175 "lexer.lex"
 { loc.lines(1); loc.step(); loc.columns(yyleng - 1);}
 	YY_BREAK
 /* Jump to next line -> error */
 case 62:
 /* rule 62 can match eol */
 YY_RULE_SETUP
-#line 177 "lexer.lex"
+#line 178 "lexer.lex"
 { print_error(loc.begin, "raw newline in string");
                  BEGIN(INITIAL);
                  return Parser::make_YYerror(loc); }
@@ -1231,7 +1232,7 @@ YY_RULE_SETUP
 /* Close string */
 case 63:
 YY_RULE_SETUP
-#line 182 "lexer.lex"
+#line 183 "lexer.lex"
 { string_buffer += "\"";
                  BEGIN(INITIAL);
                  location string_loc(string_start, loc.end);
@@ -1239,20 +1240,20 @@ YY_RULE_SETUP
 	YY_BREAK
 /* EOF in string -> error */
 case YY_STATE_EOF(IN_STRING):
-#line 188 "lexer.lex"
+#line 189 "lexer.lex"
 { print_error(string_start, "unterminated string");
                       return Parser::make_YYerror(loc); }
 	YY_BREAK
 /* Any other character */
 case 64:
 YY_RULE_SETUP
-#line 192 "lexer.lex"
-{ string_buffer += yytext[0]; }
+#line 193 "lexer.lex"
+{ loc.step(); string_buffer += yytext[0]; }
 	YY_BREAK
 /* Invalid characters */
 case 65:
 YY_RULE_SETUP
-#line 195 "lexer.lex"
+#line 196 "lexer.lex"
 {
                 print_error(loc.begin, "invalid character: " + string(yytext));
                 return Parser::make_YYerror(loc);
@@ -1260,15 +1261,15 @@ YY_RULE_SETUP
 	YY_BREAK
 /* End of file */
 case YY_STATE_EOF(INITIAL):
-#line 201 "lexer.lex"
+#line 202 "lexer.lex"
 return Parser::make_YYEOF(loc);
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 202 "lexer.lex"
+#line 203 "lexer.lex"
 ECHO;
 	YY_BREAK
-#line 1272 "lexer.cpp"
+#line 1273 "lexer.cpp"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2235,7 +2236,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 202 "lexer.lex"
+#line 203 "lexer.lex"
 
 
     /* User code */
