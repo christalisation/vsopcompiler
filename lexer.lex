@@ -75,11 +75,14 @@ line_comment "//"[^\n]*
 
         /* Inside comment */
 <IN_COMMENT>"(*" { comment_depth++; }
-<IN_COMMENT>"*)" { comment_depth--; if (comment_depth == 0) BEGIN(INITIAL); }
+<IN_COMMENT>"*)" { comment_depth--; 
+                    if (comment_depth == 0) 
+                        BEGIN(INITIAL); }
 <IN_COMMENT>\n   { loc.lines(1);loc.step(); }
 <IN_COMMENT>.    { loc.step(); }
 <IN_COMMENT><<EOF>> { print_error(loc.begin, "unterminated comment");
-                      return Parser::make_YYEOF(loc); }
+                      BEGIN(INITIAL);
+                      return Parser::make_YYerror(loc); }
 
     /* White spaces */
 {blank}+    loc.step();
