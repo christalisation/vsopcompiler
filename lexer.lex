@@ -54,12 +54,15 @@
 %x IN_STRING
 
     /* Definitions */
-t_id   [A-Z][a-zA-Z_0-9]*
-o_id [a-z][a-zA-Z_0-9]*
-hexa_int 0x[0-9a-fA-F]+
-int   [0-9]+
-blank [ \t\r\f]
-line_comment "//"[^\n]*
+t_id            [A-Z][a-zA-Z_0-9]*
+o_id            [a-z][a-zA-Z_0-9]*
+hexa_int        0x[0-9a-fA-F]+
+bad_hexa_suffix 0x[0-9a-fA-F]+[a-zA-Z_][a-zA-Z0-9_]*
+bad_hexa        0x[0-9a-fA-F]*
+bad_int         [0-9]+[a-zA-Z_][a-zA-Z0-9_]*
+int             [0-9]+
+blank           [ \t\r\f]
+line_comment    "//"[^\n]*
 
 %%
 %{
@@ -137,8 +140,14 @@ line_comment "//"[^\n]*
 {o_id}  return Parser::make_OBJECT_ID(std::string(yytext), loc);
 
     /* Integer literals */
-{hexa_int}  return Parser::make_INTEGER_LITERAL(std::stoi(yytext, nullptr, 16), loc);
-{int}       return Parser::make_INTEGER_LITERAL(std::stoi(yytext), loc);
+{bad_hexa_suffix}  { print_error(loc.begin, "invalid integer literal: " + string(yytext)); 
+                    return Parser::make_YYerror(loc); }
+{hexa_int}         { return Parser::make_INTEGER_LITERAL(stoi(yytext, nullptr, 16), loc); }
+{bad_hexa}         { print_error(loc.begin, "invalid integer literal: " + string(yytext)); 
+                    return Parser::make_YYerror(loc); }
+{bad_int}          { print_error(loc.begin, "invalid integer literal: " + string(yytext)); 
+                    return Parser::make_YYerror(loc); }
+{int}              { return Parser::make_INTEGER_LITERAL(stoi(yytext), loc); }
 
     /* String literals */
 
