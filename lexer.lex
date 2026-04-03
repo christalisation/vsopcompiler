@@ -44,9 +44,14 @@
 
     // Global variable used to track the comment nesting level.
     int comment_depth = 0;
+
+    // Global variables used for strings
+    std::string string_buffer;
+    position string_start;
 %}
 
 %x IN_COMMENT
+%x IN_STRING
 
     /* Definitions */
 t_id   [A-Z][a-zA-Z_0-9]*
@@ -64,9 +69,11 @@ line_comment "//"[^\n]*
     /* Rules */
     
     /* Multi-line comments */
-    /* Enter in comment */
+
+        /* Enter in comment */
 "(*"        { BEGIN(IN_COMMENT); comment_depth = 1;}
-    /* Inside comment */
+
+        /* Inside comment */
 <IN_COMMENT>"(*" { comment_depth++; }
 <IN_COMMENT>"*)" { comment_depth--; if (comment_depth == 0) BEGIN(INITIAL); }
 <IN_COMMENT>\n   { loc.lines(1);loc.step(); }
@@ -132,6 +139,44 @@ line_comment "//"[^\n]*
 
     /* String literals */
 
+        /* Enter in string */
+\"          { string_buffer = "\"" ; string_start = loc.begin; BEGIN(IN_STRING); }
+
+        /* Special characters */
+<IN_STRING>\\b     { string_buffer += "\\x08"; }
+<IN_STRING>\\t     { string_buffer += "\\x09"; }
+<IN_STRING>\\n     { string_buffer += "\\x0a"; }
+<IN_STRING>\\r     { string_buffer += "\\x0d"; }
+<IN_STRING>\\\"    { string_buffer += "\\x22"; }
+<IN_STRING>\\\\    { string_buffer += "\\x5c"; }
+
+        /* \xhh hex escape */
+<IN_STRING>\\x[0-9a-fA-F]{2} {
+        int val = stoi(string(yytext + 2), nullptr, 16);
+    char buffer[8];
+    snprintf(buffer, sizeof(buffer), "\\x%02x", val);
+    string_buffer += buffer;
+}
+        /* Line continuation */
+<IN_STRING>\\\n[ \t]*  { loc.lines(1); loc.step(); }
+
+        /* Jump to next line -> error */
+<IN_STRING>\n  { print_error(loc.begin, "raw newline in string");
+                 BEGIN(INITIAL);
+                 return Parser::make_YYerror(loc); }
+        
+        /* Close string */
+<IN_STRING>\"  { string_buffer += "\"";
+                 BEGIN(INITIAL);
+                 location string_loc(string_start, loc.end);
+                 return Parser::make_STRING_LITERAL(string_buffer, string_loc); }
+
+        /* EOF in string -> error */
+<IN_STRING><<EOF>>  { print_error(string_start, "unterminated string");
+                      return Parser::make_YYerror(loc); }
+
+        /* Any other character */
+<IN_STRING>.  { string_buffer += yytext[0]; }
 
     /* Invalid characters */
 .           {
