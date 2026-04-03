@@ -41,8 +41,12 @@
 
     // Global variable used to maintain the current location.
     location loc;
+
+    // Global variable used to track the comment nesting level.
+    int comment_depth = 0;
 %}
 
+%x IN_COMMENT
 
     /* Definitions */
 t_id   [A-Z][a-zA-Z_0-9]*
@@ -58,11 +62,23 @@ line_comment "//"[^\n]*
     loc.step();
 %}
     /* Rules */
+    
+    /* Multi-line comments */
+    /* Enter in comment */
+"(*"        { BEGIN(IN_COMMENT); comment_depth = 1;}
+    /* Inside comment */
+<IN_COMMENT>"(*" { comment_depth++; }
+<IN_COMMENT>"*)" { comment_depth--; if (comment_depth == 0) BEGIN(INITIAL); }
+<IN_COMMENT>\n   { loc.lines(1);loc.step(); }
+<IN_COMMENT>.    { loc.step(); }
+<IN_COMMENT><<EOF>> { print_error(loc.begin, "unterminated comment");
+                      return Parser::make_YYEOF(loc); }
 
     /* White spaces */
 {blank}+    loc.step();
 \n+         loc.lines(yyleng); loc.step();
-    /* Sigle-line comments */
+
+    /* Single-line comments */
 {line_comment}  loc.step();
 
     /* Operators */
@@ -109,9 +125,11 @@ line_comment "//"[^\n]*
     /* Identifiers */
 {t_id}    return Parser::make_TYPE_ID(std::string(yytext), loc);
 {o_id}  return Parser::make_OBJECT_ID(std::string(yytext), loc);
+
     /* Integer literals */
 {hexa_int}  return Parser::make_INTEGER_LITERAL(std::stoi(yytext, nullptr, 16), loc);
 {int}       return Parser::make_INTEGER_LITERAL(std::stoi(yytext), loc);
+
     /* String literals */
 
 
