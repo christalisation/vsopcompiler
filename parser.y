@@ -1,11 +1,13 @@
-/* This flex/bison example is provided to you as a starting point for your
- * assignment. You are free to use its code in your project.
+/* Author: Christal Mangolopa
+ * INFO0085 - Compilers
+ * Uliege - Academic year 2025-2026
+ * This flex/bison parser implements the first part of the project
+ * for a simple compiler for VSOP.
  *
- * This example implements a simple calculator. You can use the '-l' flag to
- * list all the tokens found in the source file, and the '-p' flag (or no flag)
- * to parse the file and to compute the result.
+ * You can use the '-l' flag to list all the tokens found in the 
+ * source file, and the '-p' flag (or no flag) to parse the file
+ * and to compute the result.
  *
- * Also, if you have any suggestions for improvements, please let us know.
  */
 
 %skeleton "lalr1.cc" // -*- C++ -*-
@@ -56,20 +58,59 @@
 }
 
 // Token and symbols definitions
+
+// Keywords
 %token
-    ASSIGN  ":="
-    MINUS   "-"
-    PLUS    "+"
-    STAR    "*"
-    SLASH   "/"
-    LPAREN  "("
-    RPAREN  ")"
+    AND     "and"
+    BOOL    "bool"
+    CLASS   "class"
+    DO     "do"
+    ELSE    "else"
+    EXTENDS "extends"
+    FALSE   "false"
+    IF      "if"
+    IN      "in"
+    INT32   "int32"
+    ISNULL  "isnull"
+    LET     "let"
+    NEW     "new"
+    NOT     "not"
+    SELF    "self"
+    STRING  "string"
+    THEN    "then"
+    TRUE    "true"
+    UNIT    "unit"
+    WHILE   "while"
 ;
 
-// For some symbols, need to store a value
-%token <std::string> IDENTIFIER "identifier"
-%token <int> NUMBER "number"
-%nterm <int> exp
+// Operators
+%token
+    LBRACE  "{"
+    RBRACE  "}"
+    LPAR  "("
+    RPAR  ")"
+    COLON   ":"
+    SEMICOLON ";"
+    COMMA   ","
+    PLUS    "+"
+    MINUS   "-"
+    TIMES   "*"
+    DIV     "/"
+    POW     "^"
+    DOT     "."
+    EQUAL   "="
+    LOWER   "<"
+    LOWER_EQUAL "<="
+    ASSIGN  "<-"
+;
+
+// For some symbols, need to store a value:
+
+%token <int>         INTEGER_LITERAL    "integer-literal"
+%token <std::string> STRING_LITERAL     "string-literal"
+%token <std::string> TYPE_ID            "type-identifier"
+%token <std::string> OBJECT_ID          "object-identifier"
+
 
 // Precedence
 %left "+" "-"; // Could also do: %left PLUS MINUS
@@ -78,31 +119,8 @@
 %%
 // Grammar rules
 
-%start unit;
-unit: assignments exp  { driver.result = $2; };
-
-assignments:
-    %empty                      {}
-    | assignments assignment    {};
-
-assignment:
-    "identifier" ":=" exp { driver.add_variable($1, $3); };
-
-exp:
-    "number"
-    | "identifier"  {
-                        if (!driver.has_variable($1))
-                        {
-                            error(@1, "variable " + $1 + " not defined");
-                            YYERROR;
-                        }
-                        $$ = driver.get_variable($1);
-                    }
-    | exp "+" exp   { $$ = $1 + $3; }
-    | exp "-" exp   { $$ = $1 - $3; }
-    | exp "*" exp   { $$ = $1 * $3; }
-    | exp "/" exp   { $$ = $1 / $3; }
-    | "(" exp ")"   { $$ = $2; }
+// No grammar here yet.
+program: %empty ;
 
 %%
 // User code
