@@ -32,11 +32,6 @@
     using namespace std;
     using namespace VSOP;
 
-    // Create a new NUMBER token from the value s.
-    //TODO: adapt this function to create the appropriate token for your project
-    Parser::symbol_type make_NUMBER(const string &s,
-                                    const location &loc);
-
     // Print an lexical error message.
     static void print_error(const position &pos,
                             const string &m);
@@ -52,8 +47,10 @@
     /* Definitions */
 t_id   [A-Z][a-zA-Z_0-9]*
 o_id [a-z][a-zA-Z_0-9]*
+hexa_int 0x[0-9a-fA-F]+
 int   [0-9]+
 blank [ \t\r\f]
+line_comment "//"[^\n]*
 
 %%
 %{
@@ -65,6 +62,8 @@ blank [ \t\r\f]
     /* White spaces */
 {blank}+    loc.step();
 \n+         loc.lines(yyleng); loc.step();
+    /* Sigle-line comments */
+{line_comment}  loc.step();
 
     /* Operators */
 "{"         return Parser::make_LBRACE(loc);
@@ -111,7 +110,8 @@ blank [ \t\r\f]
 {t_id}    return Parser::make_TYPE_ID(std::string(yytext), loc);
 {o_id}  return Parser::make_OBJECT_ID(std::string(yytext), loc);
     /* Integer literals */
-{int}       return Parser::make_INTEGER_LITERAL(std::string(yytext), loc);
+{hexa_int}  return Parser::make_INTEGER_LITERAL(std::stoi(yytext, nullptr, 16), loc);
+{int}       return Parser::make_INTEGER_LITERAL(std::stoi(yytext), loc);
     /* String literals */
 
 
@@ -127,13 +127,6 @@ blank [ \t\r\f]
 
     /* User code */
 
-Parser::symbol_type make_NUMBER(const string &s,
-                                const location& loc)
-{
-    int n = stoi(s);
-
-    return Parser::make_NUMBER(n, loc);
-}
 
 static void print_error(const position &pos, const string &m)
 {

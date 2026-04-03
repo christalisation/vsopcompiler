@@ -4,7 +4,7 @@ CXXFLAGS 		= -Wall -Wextra
 
 BISONFLAGS 		= -d
 
-EXEC			= vsop
+EXEC			= vsopc
 
 SRC				= main.cpp \
 				  driver.cpp \
@@ -15,6 +15,9 @@ OBJ	  			= $(SRC:.cpp=.o)
 
 
 all: $(EXEC)
+
+install-tools:
+	sudo apt-get install -y flex bison
 
 main.o: driver.hpp parser.hpp
 
