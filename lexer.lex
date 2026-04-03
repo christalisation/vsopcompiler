@@ -158,7 +158,7 @@ line_comment "//"[^\n]*
     string_buffer += buffer;
 }
         /* Line continuation */
-<IN_STRING>\\\n[ \t]*  { loc.lines(1); loc.step(); }
+<IN_STRING>\\\n[ \t]*  { loc.lines(1); loc.step(); loc.columns(yyleng - 1);}
 
         /* Jump to next line -> error */
 <IN_STRING>\n  { print_error(loc.begin, "raw newline in string");
