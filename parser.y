@@ -64,7 +64,7 @@
     AND     "and"
     BOOL    "bool"
     CLASS   "class"
-    DO     "do"
+    DO      "do"
     ELSE    "else"
     EXTENDS "extends"
     FALSE   "false"
@@ -85,23 +85,23 @@
 
 // Operators
 %token
-    LBRACE  "{"
-    RBRACE  "}"
-    LPAR  "("
-    RPAR  ")"
-    COLON   ":"
-    SEMICOLON ";"
-    COMMA   ","
-    PLUS    "+"
-    MINUS   "-"
-    TIMES   "*"
-    DIV     "/"
-    POW     "^"
-    DOT     "."
-    EQUAL   "="
-    LOWER   "<"
+    LBRACE      "{"
+    RBRACE      "}"
+    LPAR        "("
+    RPAR        ")"
+    COLON       ":"
+    SEMICOLON   ";"
+    COMMA       ","
+    PLUS        "+"
+    MINUS       "-"
+    TIMES       "*"
+    DIV         "/"
+    POW         "^"
+    DOT         "."
+    EQUAL       "="
+    LOWER       "<"
     LOWER_EQUAL "<="
-    ASSIGN  "<-"
+    ASSIGN      "<-"
 ;
 
 // For some symbols, need to store a value:
@@ -111,10 +111,6 @@
 %token <std::string> TYPE_ID            "type-identifier"
 %token <std::string> OBJECT_ID          "object-identifier"
 
-
-// Precedence
-%left "+" "-"; // Could also do: %left PLUS MINUS
-%left "*" "/";
 
 %%
 // Grammar rules
