@@ -41,6 +41,7 @@
 // C++ code put inside header file
 %code requires {
     #include <string>
+    #include "ast.hpp"
 
     namespace VSOP
     {
@@ -112,11 +113,25 @@
 %token <std::string> OBJECT_ID          "object-identifier"
 
 
+%right    ASSIGN
+%left     AND
+%right    NOT
+%nonassoc EQUAL LOWER LOWER_EQUAL
+%left     PLUS MINUS
+%left     TIMES DIV
+%right    ISNULL
+%right    POW
+%left     DOT
+
 %%
 // Grammar rules
 
-// No grammar here yet.
-program: %empty ;
+// Types of symbols (non-terminals)
+%type <Program*>                program
+%type <std::vector<ClassDecl*>> class_list
+%type <ClassDecl*>              class
+%type <Expr*>                   expr
+
 
 %%
 // User code
