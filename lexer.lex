@@ -58,7 +58,7 @@
 t_id            [A-Z][a-zA-Z_0-9]*
 o_id            [a-z][a-zA-Z_0-9]*
 hexa_int        0x[0-9a-fA-F]+
-bad_hexa_suffix 0x[0-9a-fA-F]+[a-zA-Z_][a-zA-Z0-9_]*
+bad_hexa_suffix [0-9a-fA-F]?[^0-9a-fA-F]
 incomplet_hexa  0x
 bad_int         [0-9]+[a-zA-Z_][a-zA-Z0-9_]*
 int             [0-9]+
@@ -191,7 +191,7 @@ line_comment    "//"[^\n]*
                       return Parser::make_YYerror(loc); }
 
         /* \x with less than 2 hex digits -> error */
-<IN_STRING>\\x[0-9a-fA-F]?[^0-9a-fA-F]  {
+<IN_STRING>\\xbad_hexa_suffix  {
     print_error(loc.begin, "invalid \\x escape sequence");
     loc.step();
     BEGIN(INITIAL);
