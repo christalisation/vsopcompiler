@@ -75,14 +75,10 @@ line_comment    "//"[^\n]*
     /* Multi-line comments */
 
         /* Enter in comment */
-"(*"        { BEGIN(IN_COMMENT); 
-                comment_depth++ ; 
-                comment_start = loc.begin; }
+"(*"        { BEGIN(IN_COMMENT); comment_depth++ ; comment_start = loc.begin; }
 
         /* Inside comment */
-<IN_COMMENT>"(*" { comment_depth++; 
-                    if (comment_depth == 2)
-                        comment_start = loc.begin; }
+<IN_COMMENT>"(*" { comment_depth++; }
 <IN_COMMENT>"*)" { comment_depth--; 
                     if (comment_depth == 0) 
                         BEGIN(INITIAL); }
@@ -192,16 +188,23 @@ line_comment    "//"[^\n]*
 
         /* \x with less than 2 hex digits -> error */
 <IN_STRING>\\x[0-9a-fA-F]?[^0-9a-fA-F]  {
-    print_error(loc.begin, "invalid \\x escape sequence");
     loc.step();
+    print_error(loc.begin, "invalid \\x escape sequence");
+    BEGIN(INITIAL);
+    return Parser::make_YYerror(loc);
+}
+
+        /* \x followed by end of file -> error */
+<IN_STRING>\\x<<EOF>> {
+    print_error(loc.begin, "invalid \\x escape sequence");
     BEGIN(INITIAL);
     return Parser::make_YYerror(loc);
 }
 
         /* Any other sequence \? -> error */
 <IN_STRING>\\.  {
-    print_error(loc.begin, "invalid escape sequence");
     loc.step();
+    print_error(loc.begin, "invalid escape sequence");
     BEGIN(INITIAL);
     return Parser::make_YYerror(loc);
 }
