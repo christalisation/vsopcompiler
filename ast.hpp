@@ -22,6 +22,17 @@ struct Field;
 struct Method;
 struct ClassDecl;
 
+// Helper for lists
+template<typename T>
+std::string vecToString(const std::vector<T*>& v) {
+    std::string s = "[";
+    for (size_t i = 0; i < v.size(); ++i) {
+        if (i) s += ", ";
+        s += v[i]->toString();
+    }
+    return s + "]";
+}
+
 // Expressions (base class for all expressions)
 struct Expr : ASTNode {};
 
@@ -53,9 +64,49 @@ struct Program : ASTNode
 {
     std::vector<ClassDecl*> classes;  // List of class declarations in the program
     std::string toString() const override{
-        return classes->toString(); //mettre une fct qui boucle
+        return vecToString(classes);
     }
 };
+struct Method : ASTNode
+{
+    std::string name;
+    std::vector<Formal*> formals;
+    std::string ret_type;
+    Block* block;
+    std::string toString() const override {
+        return "Method(" + name + ", " + 
+                        vecToString(formals) + ", "
+                        + ret_type + ", " +
+                        block->toString() + ")";
+    }
+};
+
+struct Field : ASTNode
+{
+    std::string name;
+    std::string type;
+    Expr* init_expr;
+    std::string toString() const override {
+        std::string s = "Field(" + name + ", " + type;
+        if (init_expr) s+= ", " + init_expr->toString();
+        return s + ")";
+    }
+};
+
+struct ClassDecl : ASTNode
+{
+    std::string name;
+    std::string parent;
+    std::vector<Field*> fields;
+    std::vector<Method*> methods; 
+    std::string toString() const override{
+        return "Class(" + name + ", " + 
+                    (parent.empty() ? "Object" : parent) + ", "
+                    + vecToString(fields) + ", "
+                    + vecToString(methods) + ")";
+    }
+};
+
 
 struct TypeID : ASTNode
 {
@@ -83,7 +134,7 @@ struct Block : Expr
 {
     std::vector<Expr*> expr_list;
     std::string toString() const override{
-        return expr_list.toString(); // mettre ici une boucle pour vector qui rend .toString() for each el of expr-list
+        return vecToString(expr_list);
     }
 };
 
@@ -157,56 +208,17 @@ struct Call : Expr
     std::string toString() const override {
         return "Call(" + obj_expr->toString()
                 + ", " + method_name + ", "
-                + expr_list.toString()
+                + vecToString(expr_list)
                 + ")";
-    };
+    }
 };
 
 struct New : Expr
 {
-    TypeID* type_name;
+    std::string type_name;
     std::string toString() const override{
-        return "New(" + type_name->toString() + ")";
+        return "New(" + type_name + ")";
     }
 };
 
-struct Method : ASTNode
-{
-    std::string name;
-    FormalList* formals;
-    std::string ret_type;
-    Block* block;
-    std::string toString() const override {
-        return "Method(" + name + ", " + 
-                        formals->toString() + ", "
-                        + ret_type + ", " +
-                        block->toString() + ")";
-    }
-};
-
-struct Field : ASTNode
-{
-    std::string name;
-    std::string type;
-    Expr* init_expr;
-    std::string toString(){
-        std::string s = "Field(" + name + ", " + type;
-        if (init_expr) s+= ", " + init_expr->toString();
-        return s + ")";
-    }
-};
-
-struct ClassDecl : ASTNode
-{
-    std::string name;
-    std::string parent;
-    std::vector<Field> fields;
-    std::vector<Method> methods; 
-    std::string toString() const override{
-        if !(parent) parent = "Object";
-        return "Class(" + name + ", " + 
-                    fields->toString() ", " 
-                    methods->toString() + ")";
-    }
-};
 

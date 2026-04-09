@@ -104,7 +104,6 @@
     LOWER_EQUAL "<="
     ASSIGN      "<-"
 ;
-%token      UMINUS
 
 // For some symbols, need to store a value:
 
@@ -123,7 +122,6 @@
 %right    ISNULL
 %right    POW
 %left     DOT
-%right    UMINUS
 
 // Non-terminals types
 %type <Program*> program
@@ -133,7 +131,7 @@
 %type <Field*>                    field
 %type <std::vector<Method*>>      methods
 %type <Method*>                   method
-%type <std::string>               type_id
+%type <TypeID>                    type_id
 %type <std::vector<Formal*>>      formals
 %type <Formal*>                   formal
 %type <Expr*>                     expr
@@ -186,7 +184,7 @@ field:
         auto* f = new Field();
         f->name = $1;
         f->type = $3;
-        f->init_expr = nullptr; // no initializer for fields
+        f->init = nullptr; // no initializer for fields
         $$ = f;
     }
   | OBJECT_ID COLON type ASSIGN expr SEMICOLON
@@ -194,7 +192,7 @@ field:
         auto* f = new Field();
         f->name = $1;
         f->type = $3;
-        f->init_expr = $5; // set initializer from expression
+        f->init = $5; // set initializer from expression
         $$ = f;
     }
 ;
@@ -209,13 +207,13 @@ method:
         m->name = $1;
         m->formals = $3;
         m->ret_type = $6;
-        m->block = $7;
+        m->body = $7;
         $$ = m;
     }
 ;
 type:
-    TYPE_ID                  { $$ = $1; }
-    | INT32                  { $$ = "int32"; }
+    TYPE_ID                { $$ = $1; }
+    | INT32                   { $$ = "int32"; }
     | BOOL                   { $$ = "bool"; }
     | STRING                 { $$ = "string"; }
     | UNIT                   { $$ = "unit"; }
@@ -241,12 +239,12 @@ block:
     LBRACE expr_list RBRACE
     {
         auto* b = new Block();
-        b->expr_list = $2;
+        b->exprs = $2;
         $$ = b;
     }
 ;
 expr_list:
-    expr_list SEMICOLON expr { $$ = $1; $$.push_back($3); }
+    expr_list expr          { $$ = $1; $$.push_back($2); }
     | expr                   { $$ = {$1}; }
 ;
 expr:
@@ -257,27 +255,27 @@ expr:
     | OBJECT_ID                { auto* o = new ObjectID(); o->name = $1; $$ = o; }
     | SELF                     { auto* o = new ObjectID(); o->name = "self"; $$ = o; }
     | NEW TYPE_ID              { auto* n = new New(); n->type_name = $2; $$ = n; }
-    | OBJECT_ID ASSIGN expr    { auto* a = new Assign(); a->name = $1; a->expr = $3; $$ = a; }
+    | OBJECT_ID ASSIGN expr    { auto* a = new Assign(); a->name = $1; a->value = $3; $$ = a; }
     | expr PLUS expr           { auto* b = new BinaryOp(); b->op = "+"; b->left_expr = $1; b->right_expr = $3; $$ = b; }
-    | MINUS expr %prec UMINUS { auto* u = new UnaryOp(); u->op = "-"; u->expr = $2; $$ = u; } // unary minus
     | expr MINUS expr          { auto* b = new BinaryOp(); b->op = "-"; b->left_expr = $1; b->right_expr = $3; $$ = b; }
     | expr TIMES expr          { auto* b = new BinaryOp(); b->op = "*"; b->left_expr = $1; b->right_expr = $3; $$ = b; }
     | expr DIV expr            { auto* b = new BinaryOp(); b->op = "/"; b->left_expr = $1; b->right_expr = $3; $$ = b; }
     | expr POW expr            { auto* b = new BinaryOp(); b->op = "^"; b->left_expr = $1; b->right_expr = $3; $$ = b; }
     | expr AND expr            { auto* b = new BinaryOp(); b->op = "and"; b->left_expr = $1; b->right_expr = $3; $$ = b; }
-    | expr EQUAL expr          { auto* b = new BinaryOp(); b->op = "="; b->left_expr = $1; b->right_expr = $3; $$ = b; }
+    | expr EQUAL expr          { auto* b = new BinaryOp(); b->op = "=="; b->left_expr = $1; b->right_expr = $3; $$ = b; }
     | expr LOWER expr          { auto* b = new BinaryOp(); b->op = "<"; b->left_expr = $1; b->right_expr = $3; $$ = b; }
     | expr LOWER_EQUAL expr    { auto* b = new BinaryOp(); b->op = "<="; b->left_expr = $1; b->right_expr = $3; $$ = b; }
     | NOT expr                 { auto* u = new UnaryOp(); u->op = "not"; u->expr = $2; $$ = u; }
+    | MINUS expr %prec UMINUS  { auto* u = new UnaryOp(); u->op = "-"; u->expr = $2; $$ = u; }
     | ISNULL expr              { auto* u = new UnaryOp(); u->op = "isnull"; u->expr = $2; $$ = u; }
     | IF expr THEN expr ELSE expr { auto* i = new If(); i->cond_expr = $2; i->then_expr = $4; i->else_expr = $6; $$ = i; }
     | IF expr THEN expr        { auto* i = new If(); i->cond_expr = $2; i->then_expr = $4; i->else_expr = nullptr; $$ = i; }
-    | WHILE expr DO expr       { auto* w = new While(); w->cond_expr = $2; w->body_expr = $4; $$ = w; }
+    | WHILE expr DO expr       { auto* w = new While(); w->cond_expr = $2; w->body = $4; $$ = w; }
     | LET OBJECT_ID COLON type ASSIGN expr IN expr
         {
             auto* l = new Let();
-            l->name = $2;
-            l->type = $4;
+            l->var_name = $2;
+            l->var_type = $4;
             l->init_expr = $6;
             l->scope_expr = $8;
             $$ = l;
@@ -285,9 +283,9 @@ expr:
     | LET OBJECT_ID COLON type IN expr
         {
             auto* l = new Let();
-            l->name = $2;
-            l->type = $4;
-            l->init_expr = nullptr; // no initializer
+            l->var_name = $2;
+            l->var_type = $4;
+            l-> init_expr = nullptr; // no initializer
             l->scope_expr = $6;
             $$ = l;
         }
@@ -302,7 +300,7 @@ expr:
     | OBJECT_ID LPAR expr_list RPAR
         {
             auto* c = new Call();
-            c->obj_expr = nullptr; // no object, call on self
+            c->obj_expr = nullptr; // no object, it's a call on self
             c->method_name = $1;
             c->expr_list = $3;
             $$ = c;
