@@ -91,6 +91,11 @@ namespace VSOP
          */
         int result;
 
+        /**
+         * @brief The root of the AST.
+         */
+        Program* program = nullptr;
+
     private:
         /**
          * @brief The source file.

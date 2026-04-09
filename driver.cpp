@@ -144,7 +144,8 @@ int Driver::parse()
     int res = parser->parse();
     scan_end();
 
-    delete parser;
+    if (res == 0 && program)
+        std::cout << program->toString() << std::endl;
 
     return res;
 }

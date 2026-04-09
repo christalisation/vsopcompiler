@@ -21,6 +21,8 @@ struct Expr;
 struct Field;
 struct Method;
 struct ClassDecl;
+struct Formal;
+struct Block;
 
 // Helper for lists
 template<typename T>
@@ -67,6 +69,25 @@ struct Program : ASTNode
         return vecToString(classes);
     }
 };
+
+struct Block : Expr
+{
+    std::vector<Expr*> expr_list;
+    std::string toString() const override{
+        return vecToString(expr_list);
+    }
+};
+
+struct ObjectID : Expr {
+    std::string name;
+    std::string toString() const override { return name; }
+};
+
+struct Features {
+    std::vector<Field*>  fields;
+    std::vector<Method*> methods;
+};
+
 struct Method : ASTNode
 {
     std::string name;
@@ -107,18 +128,9 @@ struct ClassDecl : ASTNode
     }
 };
 
-
-struct TypeID : ASTNode
-{
-    std::string type;     // "int32" | "bool" | "string" | "unit"
-    std::string toString() const override{
-        return type;
-    }
-};
-
 struct FormalList : ASTNode
 {
-    std::vector<Formal> formals;
+    std::vector<Formal*> formals;
 };
 
 struct Formal : ASTNode
@@ -127,14 +139,6 @@ struct Formal : ASTNode
     std::string type;
     std::string toString() const override{
         return name + " : " + type;
-    }
-};
-
-struct Block : Expr
-{
-    std::vector<Expr*> expr_list;
-    std::string toString() const override{
-        return vecToString(expr_list);
     }
 };
 

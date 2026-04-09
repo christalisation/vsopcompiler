@@ -30,10 +30,10 @@ lexer.o: driver.hpp parser.hpp
 $(EXEC): $(OBJ)
 	$(CXX) -o $@ $(LDFLAGS) $(OBJ)
 
-parser.cpp: parser.y
+parser.cpp: parser.ypp
 	bison $(BISONFLAGS) -o parser.cpp $^
 
-parser.hpp: parser.y
+parser.hpp: parser.ypp
 	bison $(BISONFLAGS) -o parser.cpp $^
 
 lexer.cpp: lexer.lex

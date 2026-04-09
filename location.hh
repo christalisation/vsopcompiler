@@ -53,7 +53,7 @@
 #  endif
 # endif
 
-#line 21 "parser.y"
+#line 21 "parser.ypp"
 namespace VSOP {
 #line 59 "location.hh"
 
@@ -299,7 +299,7 @@ namespace VSOP {
     return ostr;
   }
 
-#line 21 "parser.y"
+#line 21 "parser.ypp"
 } // VSOP
 #line 305 "location.hh"
 

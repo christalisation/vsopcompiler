@@ -115,6 +115,10 @@
 
 // Precedence
 %right    ASSIGN
+%precedence LET
+%precedence IN
+%precedence THEN
+%precedence ELSE 
 %left     AND
 %right    NOT
 %nonassoc EQUAL LOWER LOWER_EQUAL
@@ -133,12 +137,13 @@
 %type <Field*>                    field
 %type <std::vector<Method*>>      methods
 %type <Method*>                   method
-%type <std::string>               type_id
+%type <std::string>               type
 %type <std::vector<Formal*>>      formals
 %type <Formal*>                   formal
 %type <Expr*>                     expr
 %type <Block*>                    block
 %type <std::vector<Expr*>>        expr_list
+%type <Features>                  features   
 
 
 %%
@@ -157,13 +162,13 @@ classes:
   | classes class_decl     { $$ = $1; $$.push_back($2); }
 ;
 class_decl:
-    CLASS TYPE_ID LBRACE fields methods RBRACE
+    CLASS TYPE_ID LBRACE features RBRACE
     {  
         auto* c = new ClassDecl();
         c->name = $2;
         c->parent = "Object"; // set default parent
-        c->fields = $4;
-        c->methods = $5;
+        c->fields = $4.fields;
+        c->methods = $4.methods;
         $$ = c;
     }
   | CLASS TYPE_ID EXTENDS TYPE_ID LBRACE fields methods RBRACE
@@ -175,6 +180,11 @@ class_decl:
             c->methods = $7;
             $$ = c;
         }
+;
+features:
+    /* empty */          { $$ = {}; }
+  | features field       { $$ = $1; $$.fields.push_back($2); }
+  | features method      { $$ = $1; $$.methods.push_back($2); }
 ;
 fields:
     /* empty */           { $$ = {}; }
@@ -222,11 +232,8 @@ type:
 ;
 formals:
     /* empty */           { $$ = {}; }
-  | formal_list         { $$ = $1; }
-;
-formal_list:
-    formal                { $$ = {$1}; }
-  | formal_list COMMA formal { $$ = $1; $$.push_back($3); }
+  | formal                { $$ = {$1}; }
+  | formals COMMA formal { $$ = $1; $$.push_back($3); }
 ;
 formal:
     OBJECT_ID COLON type
@@ -256,7 +263,7 @@ expr:
     | FALSE                    { auto* b = new BoolLiteral(); b->value = false; $$ = b; }
     | OBJECT_ID                { auto* o = new ObjectID(); o->name = $1; $$ = o; }
     | SELF                     { auto* o = new ObjectID(); o->name = "self"; $$ = o; }
-    | NEW TYPE_ID              { auto* n = new New(); n->type_name = $2; $$ = n; }
+    | NEW type              { auto* n = new New(); n->type_name = $2; $$ = n; }
     | OBJECT_ID ASSIGN expr    { auto* a = new Assign(); a->name = $1; a->expr = $3; $$ = a; }
     | expr PLUS expr           { auto* b = new BinaryOp(); b->op = "+"; b->left_expr = $1; b->right_expr = $3; $$ = b; }
     | MINUS expr %prec UMINUS { auto* u = new UnaryOp(); u->op = "-"; u->expr = $2; $$ = u; } // unary minus
@@ -271,8 +278,8 @@ expr:
     | NOT expr                 { auto* u = new UnaryOp(); u->op = "not"; u->expr = $2; $$ = u; }
     | ISNULL expr              { auto* u = new UnaryOp(); u->op = "isnull"; u->expr = $2; $$ = u; }
     | IF expr THEN expr ELSE expr { auto* i = new If(); i->cond_expr = $2; i->then_expr = $4; i->else_expr = $6; $$ = i; }
-    | IF expr THEN expr        { auto* i = new If(); i->cond_expr = $2; i->then_expr = $4; i->else_expr = nullptr; $$ = i; }
-    | WHILE expr DO expr       { auto* w = new While(); w->cond_expr = $2; w->body_expr = $4; $$ = w; }
+    | IF expr THEN expr %prec THEN       { auto* i = new If(); i->cond_expr = $2; i->then_expr = $4; i->else_expr = nullptr; $$ = i; }
+    | WHILE expr DO expr %prec DOT      { auto* w = new While(); w->cond_expr = $2; w->body_expr = $4; $$ = w; }
     | LET OBJECT_ID COLON type ASSIGN expr IN expr
         {
             auto* l = new Let();
@@ -282,7 +289,7 @@ expr:
             l->scope_expr = $8;
             $$ = l;
         }
-    | LET OBJECT_ID COLON type IN expr
+    | LET OBJECT_ID COLON type IN expr %prec LET
         {
             auto* l = new Let();
             l->name = $2;

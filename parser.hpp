@@ -45,16 +45,17 @@
 #ifndef YY_YY_PARSER_HPP_INCLUDED
 # define YY_YY_PARSER_HPP_INCLUDED
 // "%code requires" blocks.
-#line 42 "parser.y"
+#line 42 "parser.ypp"
 
     #include <string>
+    #include "ast.hpp"
 
     namespace VSOP
     {
         class Driver;
     }
 
-#line 58 "parser.hpp"
+#line 59 "parser.hpp"
 
 # include <cassert>
 # include <cstdlib> // std::abort
@@ -187,9 +188,9 @@
 # define YYDEBUG 0
 #endif
 
-#line 21 "parser.y"
+#line 21 "parser.ypp"
 namespace VSOP {
-#line 193 "parser.hpp"
+#line 194 "parser.hpp"
 
 
 
@@ -403,13 +404,53 @@ namespace VSOP {
     /// An auxiliary type to compute the largest semantic type.
     union union_type
     {
+      // block
+      char dummy1[sizeof (Block*)];
+
+      // class_decl
+      char dummy2[sizeof (ClassDecl*)];
+
+      // expr
+      char dummy3[sizeof (Expr*)];
+
+      // features
+      char dummy4[sizeof (Features)];
+
+      // field
+      char dummy5[sizeof (Field*)];
+
+      // formal
+      char dummy6[sizeof (Formal*)];
+
+      // method
+      char dummy7[sizeof (Method*)];
+
+      // program
+      char dummy8[sizeof (Program*)];
+
       // "integer-literal"
-      char dummy1[sizeof (int)];
+      char dummy9[sizeof (int)];
 
       // "string-literal"
       // "type-identifier"
       // "object-identifier"
-      char dummy2[sizeof (std::string)];
+      // type
+      char dummy10[sizeof (std::string)];
+
+      // classes
+      char dummy11[sizeof (std::vector<ClassDecl*>)];
+
+      // expr_list
+      char dummy12[sizeof (std::vector<Expr*>)];
+
+      // fields
+      char dummy13[sizeof (std::vector<Field*>)];
+
+      // formals
+      char dummy14[sizeof (std::vector<Formal*>)];
+
+      // methods
+      char dummy15[sizeof (std::vector<Method*>)];
     };
 
     /// The size of the largest semantic type.
@@ -498,10 +539,11 @@ namespace VSOP {
     LOWER = 37,                    // "<"
     LOWER_EQUAL = 38,              // "<="
     ASSIGN = 39,                   // "<-"
-    INTEGER_LITERAL = 40,          // "integer-literal"
-    STRING_LITERAL = 41,           // "string-literal"
-    TYPE_ID = 42,                  // "type-identifier"
-    OBJECT_ID = 43                 // "object-identifier"
+    UMINUS = 40,                   // UMINUS
+    INTEGER_LITERAL = 41,          // "integer-literal"
+    STRING_LITERAL = 42,           // "string-literal"
+    TYPE_ID = 43,                  // "type-identifier"
+    OBJECT_ID = 44                 // "object-identifier"
       };
       /// Backward compatibility alias (Bison 3.6).
       typedef token_kind_type yytokentype;
@@ -518,7 +560,7 @@ namespace VSOP {
     {
       enum symbol_kind_type
       {
-        YYNTOKENS = 44, ///< Number of tokens.
+        YYNTOKENS = 45, ///< Number of tokens.
         S_YYEMPTY = -2,
         S_YYEOF = 0,                             // "end of file"
         S_YYerror = 1,                           // error
@@ -560,12 +602,26 @@ namespace VSOP {
         S_LOWER = 37,                            // "<"
         S_LOWER_EQUAL = 38,                      // "<="
         S_ASSIGN = 39,                           // "<-"
-        S_INTEGER_LITERAL = 40,                  // "integer-literal"
-        S_STRING_LITERAL = 41,                   // "string-literal"
-        S_TYPE_ID = 42,                          // "type-identifier"
-        S_OBJECT_ID = 43,                        // "object-identifier"
-        S_YYACCEPT = 44,                         // $accept
-        S_program = 45                           // program
+        S_UMINUS = 40,                           // UMINUS
+        S_INTEGER_LITERAL = 41,                  // "integer-literal"
+        S_STRING_LITERAL = 42,                   // "string-literal"
+        S_TYPE_ID = 43,                          // "type-identifier"
+        S_OBJECT_ID = 44,                        // "object-identifier"
+        S_YYACCEPT = 45,                         // $accept
+        S_program = 46,                          // program
+        S_classes = 47,                          // classes
+        S_class_decl = 48,                       // class_decl
+        S_features = 49,                         // features
+        S_fields = 50,                           // fields
+        S_field = 51,                            // field
+        S_methods = 52,                          // methods
+        S_method = 53,                           // method
+        S_type = 54,                             // type
+        S_formals = 55,                          // formals
+        S_formal = 56,                           // formal
+        S_block = 57,                            // block
+        S_expr_list = 58,                        // expr_list
+        S_expr = 59                              // expr
       };
     };
 
@@ -602,6 +658,38 @@ namespace VSOP {
       {
         switch (this->kind ())
     {
+      case symbol_kind::S_block: // block
+        value.move< Block* > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_class_decl: // class_decl
+        value.move< ClassDecl* > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_expr: // expr
+        value.move< Expr* > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_features: // features
+        value.move< Features > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_field: // field
+        value.move< Field* > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_formal: // formal
+        value.move< Formal* > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_method: // method
+        value.move< Method* > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_program: // program
+        value.move< Program* > (std::move (that.value));
+        break;
+
       case symbol_kind::S_INTEGER_LITERAL: // "integer-literal"
         value.move< int > (std::move (that.value));
         break;
@@ -609,7 +697,28 @@ namespace VSOP {
       case symbol_kind::S_STRING_LITERAL: // "string-literal"
       case symbol_kind::S_TYPE_ID: // "type-identifier"
       case symbol_kind::S_OBJECT_ID: // "object-identifier"
+      case symbol_kind::S_type: // type
         value.move< std::string > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_classes: // classes
+        value.move< std::vector<ClassDecl*> > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_expr_list: // expr_list
+        value.move< std::vector<Expr*> > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_fields: // fields
+        value.move< std::vector<Field*> > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_formals: // formals
+        value.move< std::vector<Formal*> > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_methods: // methods
+        value.move< std::vector<Method*> > (std::move (that.value));
         break;
 
       default:
@@ -631,6 +740,118 @@ namespace VSOP {
 #else
       basic_symbol (typename Base::kind_type t, const location_type& l)
         : Base (t)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, Block*&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const Block*& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, ClassDecl*&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const ClassDecl*& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, Expr*&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const Expr*& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, Features&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const Features& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, Field*&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const Field*& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, Formal*&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const Formal*& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, Method*&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const Method*& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, Program*&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const Program*& v, const location_type& l)
+        : Base (t)
+        , value (v)
         , location (l)
       {}
 #endif
@@ -663,6 +884,76 @@ namespace VSOP {
       {}
 #endif
 
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, std::vector<ClassDecl*>&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const std::vector<ClassDecl*>& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, std::vector<Expr*>&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const std::vector<Expr*>& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, std::vector<Field*>&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const std::vector<Field*>& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, std::vector<Formal*>&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const std::vector<Formal*>& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, std::vector<Method*>&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const std::vector<Method*>& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
       /// Destroy the symbol.
       ~basic_symbol ()
       {
@@ -685,6 +976,38 @@ namespace VSOP {
         // Value type destructor.
 switch (yykind)
     {
+      case symbol_kind::S_block: // block
+        value.template destroy< Block* > ();
+        break;
+
+      case symbol_kind::S_class_decl: // class_decl
+        value.template destroy< ClassDecl* > ();
+        break;
+
+      case symbol_kind::S_expr: // expr
+        value.template destroy< Expr* > ();
+        break;
+
+      case symbol_kind::S_features: // features
+        value.template destroy< Features > ();
+        break;
+
+      case symbol_kind::S_field: // field
+        value.template destroy< Field* > ();
+        break;
+
+      case symbol_kind::S_formal: // formal
+        value.template destroy< Formal* > ();
+        break;
+
+      case symbol_kind::S_method: // method
+        value.template destroy< Method* > ();
+        break;
+
+      case symbol_kind::S_program: // program
+        value.template destroy< Program* > ();
+        break;
+
       case symbol_kind::S_INTEGER_LITERAL: // "integer-literal"
         value.template destroy< int > ();
         break;
@@ -692,7 +1015,28 @@ switch (yykind)
       case symbol_kind::S_STRING_LITERAL: // "string-literal"
       case symbol_kind::S_TYPE_ID: // "type-identifier"
       case symbol_kind::S_OBJECT_ID: // "object-identifier"
+      case symbol_kind::S_type: // type
         value.template destroy< std::string > ();
+        break;
+
+      case symbol_kind::S_classes: // classes
+        value.template destroy< std::vector<ClassDecl*> > ();
+        break;
+
+      case symbol_kind::S_expr_list: // expr_list
+        value.template destroy< std::vector<Expr*> > ();
+        break;
+
+      case symbol_kind::S_fields: // fields
+        value.template destroy< std::vector<Field*> > ();
+        break;
+
+      case symbol_kind::S_formals: // formals
+        value.template destroy< std::vector<Formal*> > ();
+        break;
+
+      case symbol_kind::S_methods: // methods
+        value.template destroy< std::vector<Method*> > ();
         break;
 
       default:
@@ -793,7 +1137,7 @@ switch (yykind)
 #endif
       {
         YY_ASSERT (tok == token::YYEOF
-                   || (token::YYerror <= tok && tok <= token::ASSIGN));
+                   || (token::YYerror <= tok && tok <= token::UMINUS));
       }
 #if 201103L <= YY_CPLUSPLUS
       symbol_type (int tok, int v, location_type l)
@@ -1469,6 +1813,21 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
+      make_UMINUS (location_type l)
+      {
+        return symbol_type (token::UMINUS, std::move (l));
+      }
+#else
+      static
+      symbol_type
+      make_UMINUS (const location_type& l)
+      {
+        return symbol_type (token::UMINUS, l);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
       make_INTEGER_LITERAL (int v, location_type l)
       {
         return symbol_type (token::INTEGER_LITERAL, std::move (v), std::move (l));
@@ -1570,7 +1929,7 @@ switch (yykind)
     // Tables.
     // YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
     // STATE-NUM.
-    static const signed char yypact_[];
+    static const short yypact_[];
 
     // YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
     // Performed when YYTABLE does not specify something else to do.  Zero
@@ -1578,7 +1937,7 @@ switch (yykind)
     static const signed char yydefact_[];
 
     // YYPGOTO[NTERM-NUM].
-    static const signed char yypgoto_[];
+    static const short yypgoto_[];
 
     // YYDEFGOTO[NTERM-NUM].
     static const signed char yydefgoto_[];
@@ -1603,7 +1962,7 @@ switch (yykind)
 
 #if YYDEBUG
     // YYRLINE[YYN] -- Source line where rule number YYN was defined.
-    static const signed char yyrline_[];
+    static const short yyrline_[];
     /// Report on the debug stream that the rule \a r is going to be reduced.
     virtual void yy_reduce_print_ (int r) const;
     /// Print the state stack on the debug stream.
@@ -1830,9 +2189,9 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 0,     ///< Last index in yytable_.
-      yynnts_ = 2,  ///< Number of nonterminal symbols.
-      yyfinal_ = 2 ///< Termination state number.
+      yylast_ = 197,     ///< Last index in yytable_.
+      yynnts_ = 15,  ///< Number of nonterminal symbols.
+      yyfinal_ = 6 ///< Termination state number.
     };
 
 
@@ -1857,6 +2216,38 @@ switch (yykind)
   {
     switch (this->kind ())
     {
+      case symbol_kind::S_block: // block
+        value.copy< Block* > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_class_decl: // class_decl
+        value.copy< ClassDecl* > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_expr: // expr
+        value.copy< Expr* > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_features: // features
+        value.copy< Features > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_field: // field
+        value.copy< Field* > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_formal: // formal
+        value.copy< Formal* > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_method: // method
+        value.copy< Method* > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_program: // program
+        value.copy< Program* > (YY_MOVE (that.value));
+        break;
+
       case symbol_kind::S_INTEGER_LITERAL: // "integer-literal"
         value.copy< int > (YY_MOVE (that.value));
         break;
@@ -1864,7 +2255,28 @@ switch (yykind)
       case symbol_kind::S_STRING_LITERAL: // "string-literal"
       case symbol_kind::S_TYPE_ID: // "type-identifier"
       case symbol_kind::S_OBJECT_ID: // "object-identifier"
+      case symbol_kind::S_type: // type
         value.copy< std::string > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_classes: // classes
+        value.copy< std::vector<ClassDecl*> > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_expr_list: // expr_list
+        value.copy< std::vector<Expr*> > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_fields: // fields
+        value.copy< std::vector<Field*> > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_formals: // formals
+        value.copy< std::vector<Formal*> > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_methods: // methods
+        value.copy< std::vector<Method*> > (YY_MOVE (that.value));
         break;
 
       default:
@@ -1896,6 +2308,38 @@ switch (yykind)
     super_type::move (s);
     switch (this->kind ())
     {
+      case symbol_kind::S_block: // block
+        value.move< Block* > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_class_decl: // class_decl
+        value.move< ClassDecl* > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_expr: // expr
+        value.move< Expr* > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_features: // features
+        value.move< Features > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_field: // field
+        value.move< Field* > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_formal: // formal
+        value.move< Formal* > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_method: // method
+        value.move< Method* > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_program: // program
+        value.move< Program* > (YY_MOVE (s.value));
+        break;
+
       case symbol_kind::S_INTEGER_LITERAL: // "integer-literal"
         value.move< int > (YY_MOVE (s.value));
         break;
@@ -1903,7 +2347,28 @@ switch (yykind)
       case symbol_kind::S_STRING_LITERAL: // "string-literal"
       case symbol_kind::S_TYPE_ID: // "type-identifier"
       case symbol_kind::S_OBJECT_ID: // "object-identifier"
+      case symbol_kind::S_type: // type
         value.move< std::string > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_classes: // classes
+        value.move< std::vector<ClassDecl*> > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_expr_list: // expr_list
+        value.move< std::vector<Expr*> > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_fields: // fields
+        value.move< std::vector<Field*> > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_formals: // formals
+        value.move< std::vector<Formal*> > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_methods: // methods
+        value.move< std::vector<Method*> > (YY_MOVE (s.value));
         break;
 
       default:
@@ -1967,9 +2432,9 @@ switch (yykind)
     return this->kind ();
   }
 
-#line 21 "parser.y"
+#line 21 "parser.ypp"
 } // VSOP
-#line 1973 "parser.hpp"
+#line 2438 "parser.hpp"
 
 
 
