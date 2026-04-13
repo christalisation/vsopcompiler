@@ -125,17 +125,15 @@
 %left     PLUS MINUS
 %left     TIMES DIV
 %right    ISNULL
-%right    POW
-%left     DOT
 %right    UMINUS
+%left     DOT
+%right    POW
 
 // Non-terminals types
 %type <Program*> program
 %type <std::vector<ClassDecl*>>   classes
 %type <ClassDecl*>                class_decl
-%type <std::vector<Field*>>       fields
 %type <Field*>                    field
-%type <std::vector<Method*>>      methods
 %type <Method*>                   method
 %type <std::string>               type
 %type <std::vector<Formal*>>      formals
@@ -171,13 +169,13 @@ class_decl:
         c->methods = $4.methods;
         $$ = c;
     }
-  | CLASS TYPE_ID EXTENDS TYPE_ID LBRACE fields methods RBRACE
+  | CLASS TYPE_ID EXTENDS TYPE_ID LBRACE features RBRACE
         {
             auto* c = new ClassDecl();
             c->name = $2;
             c->parent = $4; // set parent from EXTENDS
-            c->fields = $6;
-            c->methods = $7;
+            c->fields = $6.fields;
+            c->methods = $6.methods;
             $$ = c;
         }
 ;
@@ -185,10 +183,6 @@ features:
     /* empty */          { $$ = {}; }
   | features field       { $$ = $1; $$.fields.push_back($2); }
   | features method      { $$ = $1; $$.methods.push_back($2); }
-;
-fields:
-    /* empty */           { $$ = {}; }
-  | fields field          { $$ = $1; $$.push_back($2); }
 ;
 field:
     OBJECT_ID COLON type SEMICOLON
@@ -207,10 +201,6 @@ field:
         f->init_expr = $5; // set initializer from expression
         $$ = f;
     }
-;
-methods:
-    /* empty */           { $$ = {}; }
-  | methods method         { $$ = $1; $$.push_back($2); }
 ;
 method:
     OBJECT_ID LPAR formals RPAR COLON type block
@@ -280,7 +270,7 @@ expr:
     | IF expr THEN expr      %prec THEN { auto* i = new If(); i->cond_expr = $2; i->then_expr = $4; i->else_expr = nullptr; $$ = i; }
     | IF expr THEN expr ELSE expr       { auto* i = new If(); i->cond_expr = $2; i->then_expr = $4; i->else_expr = $6; $$ = i; }
     | WHILE expr DO expr     %prec DOT  { auto* w = new While(); w->cond_expr = $2; w->body_expr = $4; $$ = w; }
-    | LET OBJECT_ID COLON type IN expr              %prec THEN
+    | LET OBJECT_ID COLON type IN expr              %prec LET
         {
             auto* l = new Let();
             l->name = $2;
@@ -289,7 +279,7 @@ expr:
             l->scope_expr = $6;
             $$ = l;
         }
-    | LET OBJECT_ID COLON type ASSIGN expr IN expr  %prec THEN
+    | LET OBJECT_ID COLON type ASSIGN expr IN expr   %prec LET
         {
             auto* l = new Let();
             l->name = $2;

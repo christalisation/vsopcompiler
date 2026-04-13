@@ -29,7 +29,7 @@ template<typename T>
 std::string vecToString(const std::vector<T*>& v) {
     std::string s = "[";
     for (size_t i = 0; i < v.size(); ++i) {
-        if (i) s += ", ";
+        if (i) s += ",\n   ";
         s += v[i]->toString();
     }
     return s + "]";
@@ -97,7 +97,7 @@ struct Method : ASTNode
     std::string toString() const override {
         return "Method(" + name + ", " + 
                         vecToString(formals) + ", "
-                        + ret_type + ", " +
+                        + ret_type + ",\n   " +
                         block->toString() + ")";
     }
 };
@@ -109,7 +109,7 @@ struct Field : ASTNode
     Expr* init_expr;
     std::string toString() const override {
         std::string s = "Field(" + name + ", " + type;
-        if (init_expr) s+= ", " + init_expr->toString();
+        if (init_expr) s+= ",\n   " + init_expr->toString();
         return s + ")";
     }
 };
@@ -123,7 +123,7 @@ struct ClassDecl : ASTNode
     std::string toString() const override{
         return "Class(" + name + ", " + 
                     (parent.empty() ? "Object" : parent) + ", "
-                    + vecToString(fields) + ", "
+                    + vecToString(fields) + ",\n   "
                     + vecToString(methods) + ")";
     }
 };
@@ -171,8 +171,8 @@ struct Let : Expr {
     Expr* scope_expr;
     std::string toString() const override {
         std::string s = "Let(" + name + ", " + type;
-        if (init_expr) s += ", " + init_expr->toString();
-        return s + ", " + scope_expr->toString() + ")";
+        if (init_expr) s += ",\n   " + init_expr->toString();
+        return s + ",\n   " + scope_expr->toString() + ")";
     }
 };
 
