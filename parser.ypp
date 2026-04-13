@@ -263,10 +263,10 @@ expr:
     | FALSE                    { auto* b = new BoolLiteral(); b->value = false; $$ = b; }
     | OBJECT_ID                { auto* o = new ObjectID(); o->name = $1; $$ = o; }
     | SELF                     { auto* o = new ObjectID(); o->name = "self"; $$ = o; }
-    | NEW type              { auto* n = new New(); n->type_name = $2; $$ = n; }
+    | NEW type                 { auto* n = new New(); n->type_name = $2; $$ = n; }
     | OBJECT_ID ASSIGN expr    { auto* a = new Assign(); a->name = $1; a->expr = $3; $$ = a; }
     | expr PLUS expr           { auto* b = new BinaryOp(); b->op = "+"; b->left_expr = $1; b->right_expr = $3; $$ = b; }
-    | MINUS expr %prec UMINUS { auto* u = new UnaryOp(); u->op = "-"; u->expr = $2; $$ = u; } // unary minus
+    | MINUS expr  %prec UMINUS { auto* u = new UnaryOp(); u->op = "-"; u->expr = $2; $$ = u; } // unary minus
     | expr MINUS expr          { auto* b = new BinaryOp(); b->op = "-"; b->left_expr = $1; b->right_expr = $3; $$ = b; }
     | expr TIMES expr          { auto* b = new BinaryOp(); b->op = "*"; b->left_expr = $1; b->right_expr = $3; $$ = b; }
     | expr DIV expr            { auto* b = new BinaryOp(); b->op = "/"; b->left_expr = $1; b->right_expr = $3; $$ = b; }
@@ -277,25 +277,25 @@ expr:
     | expr LOWER_EQUAL expr    { auto* b = new BinaryOp(); b->op = "<="; b->left_expr = $1; b->right_expr = $3; $$ = b; }
     | NOT expr                 { auto* u = new UnaryOp(); u->op = "not"; u->expr = $2; $$ = u; }
     | ISNULL expr              { auto* u = new UnaryOp(); u->op = "isnull"; u->expr = $2; $$ = u; }
-    | IF expr THEN expr ELSE expr { auto* i = new If(); i->cond_expr = $2; i->then_expr = $4; i->else_expr = $6; $$ = i; }
-    | IF expr THEN expr %prec THEN       { auto* i = new If(); i->cond_expr = $2; i->then_expr = $4; i->else_expr = nullptr; $$ = i; }
-    | WHILE expr DO expr %prec DOT      { auto* w = new While(); w->cond_expr = $2; w->body_expr = $4; $$ = w; }
-    | LET OBJECT_ID COLON type ASSIGN expr IN expr
-        {
-            auto* l = new Let();
-            l->name = $2;
-            l->type = $4;
-            l->init_expr = $6;
-            l->scope_expr = $8;
-            $$ = l;
-        }
-    | LET OBJECT_ID COLON type IN expr %prec LET
+    | IF expr THEN expr      %prec THEN { auto* i = new If(); i->cond_expr = $2; i->then_expr = $4; i->else_expr = nullptr; $$ = i; }
+    | IF expr THEN expr ELSE expr       { auto* i = new If(); i->cond_expr = $2; i->then_expr = $4; i->else_expr = $6; $$ = i; }
+    | WHILE expr DO expr     %prec DOT  { auto* w = new While(); w->cond_expr = $2; w->body_expr = $4; $$ = w; }
+    | LET OBJECT_ID COLON type IN expr              %prec THEN
         {
             auto* l = new Let();
             l->name = $2;
             l->type = $4;
             l->init_expr = nullptr; // no initializer
             l->scope_expr = $6;
+            $$ = l;
+        }
+    | LET OBJECT_ID COLON type ASSIGN expr IN expr  %prec THEN
+        {
+            auto* l = new Let();
+            l->name = $2;
+            l->type = $4;
+            l->init_expr = $6;
+            l->scope_expr = $8;
             $$ = l;
         }
     | expr DOT OBJECT_ID LPAR expr_list RPAR

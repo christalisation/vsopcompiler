@@ -62,7 +62,7 @@ int main(int argc, char const *argv[])
     case Mode::LEX:
         res = driver.lex();
 
-        if (res == 0)
+        //if (res == 0)
         driver.print_tokens();
 
         return res;
@@ -70,8 +70,8 @@ int main(int argc, char const *argv[])
     case Mode::PARSE:
         res = driver.parse();
 
-        // if (res == 0)
-            // cout << "Result: " << driver.result << endl;
+        //if (res == 0)
+            //cout << "Result: " << driver.result << endl;
 
         return res;
     }
