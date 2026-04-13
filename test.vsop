@@ -1,11 +1,35 @@
-class C {
+class List {
+    isNil() : bool { true }
+    length() : int32 { 0 }
+}
 
-    get42() : int32 {
-        1 + addOne(40)
+(* Nil is nothing more than a glorified alias to List *)
+class Nil extends List { }
+
+class Cons extends List {
+    head : int32;
+    tail : List;
+
+    init(hd : int32, tl : List) : Cons {
+        head <- hd;
+        tail <- tl;
+        self
     }
 
-    addOne(i : int32) : int32 { i + self.one() }
+    head() : int32 { head }
+    isNil() : bool { false }
+    length() : int32 { 1 + tail.length() }
+}
 
-    one() : int32 { 1 }
-
+class Main {
+    main() : int32 {
+        let xs : List <- (new Cons).init(0, (new Cons).init(
+                                         1, (new Cons).init(
+                                         2, new Nil))) in {
+            print("List has length ");
+            printInt32(xs.length());
+            print("\n");
+            0
+        }
+    }
 }

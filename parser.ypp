@@ -249,7 +249,8 @@ expr_list:
 ;
 args:
     /* empty */          { $$ = {}; }
-  | expr_list            { $$ = $1; }
+  | expr                 { $$ = {$1}; }
+  | args COMMA expr       { $$ = $1; $$.push_back($3); }
 ;
 expr:
     INTEGER_LITERAL          { auto* i = new IntLiteral(); i->value = $1; $$ = i; }
