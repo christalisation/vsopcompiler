@@ -50,7 +50,7 @@ struct StringLiteral : Expr
 {
     std::string value;
     std::string toString() const override{
-        return "\"" + value + "\"";
+        return value;
     }
 };
 
