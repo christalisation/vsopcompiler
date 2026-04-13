@@ -142,6 +142,7 @@
 %type <Block*>                    block
 %type <std::vector<Expr*>>        expr_list
 %type <Features>                  features   
+%type <std::vector<Expr*>>        args
 
 
 %%
@@ -223,7 +224,7 @@ type:
 formals:
     /* empty */           { $$ = {}; }
   | formal                { $$ = {$1}; }
-  | formals COMMA formal { $$ = $1; $$.push_back($3); }
+  | formals COMMA formal  { $$ = $1; $$.push_back($3); }
 ;
 formal:
     OBJECT_ID COLON type
@@ -245,6 +246,10 @@ block:
 expr_list:
     expr_list SEMICOLON expr { $$ = $1; $$.push_back($3); }
     | expr                   { $$ = {$1}; }
+;
+args:
+    /* empty */          { $$ = {}; }
+  | expr_list            { $$ = $1; }
 ;
 expr:
     INTEGER_LITERAL          { auto* i = new IntLiteral(); i->value = $1; $$ = i; }
@@ -288,7 +293,7 @@ expr:
             l->scope_expr = $8;
             $$ = l;
         }
-    | expr DOT OBJECT_ID LPAR expr_list RPAR
+    | expr DOT OBJECT_ID LPAR args RPAR
         {
             auto* c = new Call();
             c->obj_expr = $1;
@@ -296,7 +301,7 @@ expr:
             c->expr_list = $5;
             $$ = c;
         }
-    | OBJECT_ID LPAR expr_list RPAR
+    | OBJECT_ID LPAR args RPAR
         {
             auto* c = new Call();
             c->obj_expr = nullptr; // no object, call on self
