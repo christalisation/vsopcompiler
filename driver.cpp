@@ -150,6 +150,27 @@ int Driver::parse()
     return res;
 }
 
+int Driver::semantic() {
+    scan_begin();
+
+    parser = new Parser(*this);
+
+    int res = parser->parse();
+    scan_end();
+
+    if (res != 0) return res;          // lexicale or syntaxic error
+    if (!program) return 1;            // security
+
+    SemanticAnalyzer analyzer;
+
+    if (!analyzer.analyze(program))
+        return 1;                      // semantic error
+
+    std::cout << program->toString() << std::endl;  // AST annotated
+    
+    return 0;
+}
+
 void Driver::print_tokens()
 {
     for (auto token : tokens)

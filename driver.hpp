@@ -82,6 +82,13 @@ namespace VSOP
         int parse();
 
         /**
+        * @brief Run the semantic analysis on the source file.
+        *
+        * @return int 0 if no syntax, lexical or semantic error.
+        */
+        int semantic();
+
+        /**
          * @brief Print all the tokens.
          */
         void print_tokens();
