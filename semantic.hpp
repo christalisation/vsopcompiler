@@ -53,26 +53,26 @@ private:
      * PASS 3 —
      * 
      * @brief Collects field types and method signatures for all classes into
-     *        field_table and method_table.
+     *        `field_table` and `method_table`.
      *
      * Also verifies that:
-     * - All used types exist in class_table.
+     * - All used types exist in `class_table`.
      * - No field is defined twice in the same class.
      * - Overriding methods have the same signature as their parent declaration.
      *
-     * Must be run after check_cycles().
+     * Must be run after `check_cycles()`.
      *
      * @param p The root AST node of the program.
      */
     void collect_members(Program* p);
 
     // === PASS 4: Type-check method bodies and field initializers ===
-    void type_check(Program* p);
-    void type_check_method(Method* m, ClassDecl* cls);
-    std::string type_check_expr(Expr* e, /* scope */);
+    // void type_check(Program* p);
+    // void type_check_method(Method* m, ClassDecl* cls);
+    // std::string type_check_expr(Expr* e, /* scope */);
 
     // Shared data struct
-    std::map<std::string, ClassDecl*>                             class_table;
+    std::map<std::string, ClassDecl*> class_table;
     std::map<std::string, std::map<std::string, std::string>>     field_table;  // class -> {field -> type}
     std::map<std::string, std::map<std::string, MethodSignature>> method_table; // class -> {method -> sig}
 

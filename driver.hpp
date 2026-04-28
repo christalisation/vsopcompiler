@@ -16,6 +16,7 @@
 #include <map>
 
 #include "parser.hpp"
+#include "semantic.hpp"
 
 // Give prototype of yylex() function, then declare it.
 #define YY_DECL VSOP::Parser::symbol_type yylex()

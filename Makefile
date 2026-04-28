@@ -50,13 +50,14 @@ clean:
 
 .PHONY: clean
 
-ARCHIVE = vsopcompiler.tar.xz
+ARCHIVE = ../vsopcompiler.tar.xz
 PROJECT_DIR = $(shell basename $(CURDIR))
 
 submit: clean
 	@cd .. && COPYFILE_DISABLE=1 tar -cJf $(PROJECT_DIR)/$(ARCHIVE) \
 		--exclude='.git' \
 		--exclude='.DS_Store' \
+		--exclude='$(PROJECT_DIR)/$(ARCHIVE)' \
 		$(PROJECT_DIR)/
 	@echo "Archive created: $(ARCHIVE)"
 	@tar -tJf $(ARCHIVE) | wc -l | xargs echo "Files in archive:"

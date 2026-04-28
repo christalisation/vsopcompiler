@@ -8,8 +8,8 @@ bool SemanticAnalyzer::analyze(Program* program) {
     check_cycles();
     if (has_error) return false;
 
-    // collect_members(program);
-    // if (has_error) return false;
+    collect_members(program);
+    if (has_error) return false;
 
     // type_check(program);
 
@@ -22,8 +22,15 @@ void SemanticAnalyzer::error(int line, int col, const std::string& msg) {
 }
 
 void SemanticAnalyzer::collect_classes(Program* p) {
-    // Predefined class root of the hierarchy
-    class_table["Object"] = nullptr;
+
+    // Built-in types stored as nullptr , not real ClassDecl nodes
+
+    class_table["Object"] = nullptr; // Predefined class root of the hierarchy
+
+    class_table["int32"]  = nullptr; // All primitives
+    class_table["bool"]   = nullptr;
+    class_table["string"] = nullptr;
+    class_table["unit"]   = nullptr;
 
     // Loop 1 : 
     // - find all class declarations
@@ -48,7 +55,7 @@ void SemanticAnalyzer::collect_classes(Program* p) {
 
 void SemanticAnalyzer::check_cycles() {
     for (auto& [name, c] : class_table) {
-        if (name == "Object") continue;
+        if (c == nullptr) continue;  // skip built-in types (Object and primitives)
 
         std::set<std::string> visited_classes;
         std::string current = name;
@@ -72,14 +79,15 @@ void SemanticAnalyzer::collect_members(Program* p) {
     for (auto* c : p->classes) {
 
         // --- Fields ---
-        for (auto* f : c->fields) {
-            if (!class_table.count(f->type)) {
-                error(f->line, f->col, "unknown type " + f->type);
+        for (auto* field : c->fields) {
+            if (!class_table.count(field->type)) {
+                error(field->line, field->col, "unknown type " + field->type);
             }
-            if (field_table[c->name].count(f->name)) {
-                error(f->line, f->col, "field " + f->name + " already defined");
+            if (field_table[c->name].count(field->name)) {
+                error(field->line, field->col, "field " + field->name + " already defined");
             } else {
-                field_table[c->name][f->name] = f->type;
+                // infer a type
+                field_table[c->name][field->name] = field->type;
             }
         }
 
@@ -103,8 +111,9 @@ void SemanticAnalyzer::collect_members(Program* p) {
     // Loop 2 : check method overrides have the same signature as parent
     for (auto* c : p->classes) {
         if (c->parent == "Object") continue;
+
         for (auto* m : c->methods) {
-            // remonter la hiérarchie pour trouver si la méthode existe dans un parent
+            // find method in parent
             std::string parent = c->parent;
             while (parent != "Object") {
                 if (method_table[parent].count(m->name)) {
@@ -123,24 +132,24 @@ void SemanticAnalyzer::collect_members(Program* p) {
     }
 }
 
-std::string typeCheckExpr(Expr* e, 
-                           std::map<std::string, std::string>& scope,
-                           const std::string& currentClass) {
-    if (auto* i = dynamic_cast<IntLiteral*>(e)) {
-        return e->inferred_type = "int32";
-    }
-    if (auto* b = dynamic_cast<BinaryOp*>(e)) {
-        auto l = typeCheckExpr(b->left_expr,  scope, currentClass);
-        auto r = typeCheckExpr(b->right_expr, scope, currentClass);
-        if (b->op == "+" || b->op == "-" || ...) {
-            if (l != "int32" || r != "int32") error(...);
-            return e->inferred_type = "int32";
-        }
-        // ...
-    }
-    if (auto* call = dynamic_cast<Call*>(e)) {
-        // ...
-    }
-    // etc.
-    return e->inferred_type = "__error__"; // dummy fallback
-}
+// std::string typeCheckExpr(Expr* e, 
+//                            std::map<std::string, std::string>& scope,
+//                            const std::string& currentClass) {
+//     if (auto* i = dynamic_cast<IntLiteral*>(e)) {
+//         return e->inferred_type = "int32";
+//     }
+//     if (auto* b = dynamic_cast<BinaryOp*>(e)) {
+//         auto l = typeCheckExpr(b->left_expr,  scope, currentClass);
+//         auto r = typeCheckExpr(b->right_expr, scope, currentClass);
+//         if (b->op == "+" || b->op == "-" || ...) {
+//             if (l != "int32" || r != "int32") error(...);
+//             return e->inferred_type = "int32";
+//         }
+//         // ...
+//     }
+//     if (auto* call = dynamic_cast<Call*>(e)) {
+//         // ...
+//     }
+//     // etc.
+//     return e->inferred_type = "__error__"; // dummy fallback
+// }
