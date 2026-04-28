@@ -1,6 +1,6 @@
 CXX 			= clang++
 
-CXXFLAGS 		= -Wall -Wextra
+CXXFLAGS 		= -Wall -Wextra -std=c++17
 
 BISONFLAGS 		= -d
 
@@ -9,7 +9,8 @@ EXEC			= vsopc
 SRC				= main.cpp \
 				  driver.cpp \
 				  parser.cpp \
-				  lexer.cpp
+				  lexer.cpp \
+				  semantic.cpp
 
 OBJ	  			= $(SRC:.cpp=.o)
 
@@ -21,11 +22,13 @@ install-tools:
 
 main.o: driver.hpp parser.hpp
 
-driver.o: driver.hpp parser.hpp
+driver.o: driver.hpp parser.hpp ast.hpp
 
-parser.o: driver.hpp parser.hpp
+parser.o: driver.hpp parser.hpp ast.hpp
 
 lexer.o: driver.hpp parser.hpp
+
+semantic.o: semantic.hpp ast.hpp
 
 $(EXEC): $(OBJ)
 	$(CXX) -o $@ $(LDFLAGS) $(OBJ)
@@ -46,3 +49,16 @@ clean:
 	@rm -f parser.cpp parser.hpp location.hh
 
 .PHONY: clean
+
+ARCHIVE = vsopcompiler.tar.xz
+PROJECT_DIR = $(shell basename $(CURDIR))
+
+submit: clean
+	@cd .. && COPYFILE_DISABLE=1 tar -cJf $(PROJECT_DIR)/$(ARCHIVE) \
+		--exclude='.git' \
+		--exclude='.DS_Store' \
+		$(PROJECT_DIR)/
+	@echo "Archive created: $(ARCHIVE)"
+	@tar -tJf $(ARCHIVE) | wc -l | xargs echo "Files in archive:"
+
+.PHONY: clean submit
