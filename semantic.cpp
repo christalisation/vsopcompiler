@@ -43,8 +43,15 @@ bool SemanticAnalyzer::analyze(Program* program) {
         for (auto* m : c->methods) {
             std::map<std::string, std::string> scope;
             scope["self"] = c->name;
+            std::string clas = c->name;
+            while (clas != "Object" && class_table.count(clas) && class_table[clas]) {
+                for (auto& [fname, ftype] : field_table[clas])
+                    if (!scope.count(fname))  // ne pas écraser un field plus proche
+                        scope[fname] = ftype;
+                clas = class_table[clas]->parent;
+            }
             for (auto* f : m->formals)
-                scope[f->name] = f->type;
+                scope[f->name] = f->type;   // shadowing formals > fields OK en VSOP
             typecheck_expr(m->block, scope, c->name);
         }
     }
