@@ -312,6 +312,7 @@ expr:
         }
     | LPAR expr RPAR    { $$ = $2; }
     | block             { $$ = $1; }
+    | LPAR RPAR         { $$ = new UnitLiteral(); $$->line = @1.begin.line; $$->col = @1.begin.column; }
 ;
 
 %%

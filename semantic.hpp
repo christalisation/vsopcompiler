@@ -66,10 +66,35 @@ private:
      */
     void collect_members(Program* p);
 
-    // === PASS 4: Type-check method bodies and field initializers ===
-    // void type_check(Program* p);
-    // void type_check_method(Method* m, ClassDecl* cls);
-    // std::string type_check_expr(Expr* e, /* scope */);
+    /**
+     * PASS 4 —
+     * 
+     * @brief Recursively type-checks all method bodies and field initializers.
+     * 
+     * Checks that:
+     * - All expressions are well-typed.
+     * - Method calls have correct number and types of arguments.
+     * - The return type of each method body matches its declared return type.
+     * 
+     * Must be run after `collect_members()`.
+     * 
+     * @param e The expression to type-check.
+     */
+    std::string typecheck_expr(Expr* e, std::map<std::string, std::string>& scope, const std::string& current_class);
+
+    /**
+     * @brief Checks if type A is a subtype of type B in the class hierarchy.
+     *        Needed for: assignment, method arguments, if-then-else branches.
+     * @return true if A == B or A inherits from B (directly or transitively).
+     */
+    bool is_subtype(const std::string& type_a, const std::string& type_b);
+
+    /**
+     * @brief Computes the Lowest Common Ancestor of two types in the hierarchy.
+     *        Needed for: if-then-else return type (common type of both branches).
+     * @return The nearest common ancestor type (always exists since Object is root).
+     */
+    std::string lca(const std::string& l_type, const std::string& r_type);
 
     // Shared data struct
     std::map<std::string, ClassDecl*> class_table;
