@@ -13,7 +13,6 @@ bool SemanticAnalyzer::analyze(Program* program) {
 
     // ---pass 3
     collect_members(program);
-    if (has_error) return false;
 
     // Main class + main() method with no arg
     if (!class_table.count("Main"))
@@ -25,19 +24,28 @@ bool SemanticAnalyzer::analyze(Program* program) {
         else if (!methods["main"].param_types.empty())
             error(0, 0, "method main must take no arguments");
     }
+    if (has_error) return false;
 
     // ---pass 4
     for (auto* c : program->classes) {
         //
         for (auto* f : c->fields) {
             if (f->init_expr) {
-                std::map<std::string, std::string> scope;
-                scope["self"] = c->name;
-                std::string t = typecheck_expr(f->init_expr, scope, c->name);
-                if (!is_subtype(t, f->type))
-                    error(f->line, f->col,
-                        "field " + f->name + " init type " + t +
-                        " not subtype of " + f->type);
+            std::map<std::string, std::string> scope;
+            scope["self"] = c->name;
+            // fields des parents aussi visibles dans les initialiseurs
+            std::string klass = c->name;
+            while (klass != "Object" && class_table.count(klass) && class_table[klass]) {
+                for (auto& [fname, ftype] : field_table[klass])
+                    if (!scope.count(fname))
+                        scope[fname] = ftype;
+                klass = class_table[klass]->parent;
+            }
+            std::string t = typecheck_expr(f->init_expr, scope, c->name);
+            if (!is_subtype(t, f->type))
+                error(f->line, f->col,
+                    "field " + f->name + " init type " + t +
+                    " not subtype of " + f->type);
             }
         }
         for (auto* m : c->methods) {
@@ -60,7 +68,7 @@ bool SemanticAnalyzer::analyze(Program* program) {
 }
 
 void SemanticAnalyzer::error(int line, int col, const std::string& msg) {
-    std::cerr << line << ":" << col << ": semantic error: " << msg << std::endl;
+    std::cerr << filename << ":" << line << ":" << col << ": semantic error: " << msg << std::endl;
     has_error = true;
 }
 
@@ -117,6 +125,13 @@ void SemanticAnalyzer::check_cycles() {
 }
 
 void SemanticAnalyzer::collect_members(Program* p) {
+    // Built-in methods of Object
+    method_table["Object"]["print"]      = { {"string"}, "Object" };
+    method_table["Object"]["printBool"]  = { {"bool"},   "Object" };
+    method_table["Object"]["printInt32"] = { {"int32"},  "Object" };
+    method_table["Object"]["inputLine"]  = { {},         "string" };
+    method_table["Object"]["inputBool"]  = { {},         "bool"   };
+    method_table["Object"]["inputInt32"] = { {},         "int32"  };
 
     // Loop 1 : register all fields and method signatures per class
     for (auto* c : p->classes) {

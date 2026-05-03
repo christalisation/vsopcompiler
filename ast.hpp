@@ -161,7 +161,7 @@ struct Call : Expr
     std::string method_name;
     std::vector<Expr*> expr_list;
     std::string toString() const override {
-        std::string obj = obj_expr ? obj_expr->toString() : "self";
+        std::string obj = obj_expr ? obj_expr->toString() : "self : " + inferred_type;
         return annotated("Call(" + obj + ", " 
                 + method_name + ", "
                 + vecToString(expr_list)

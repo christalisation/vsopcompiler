@@ -162,6 +162,7 @@ int Driver::semantic() {
     if (!program) return 1;            // security
 
     SemanticAnalyzer analyzer;
+    analyzer.filename = source_file;
 
     if (!analyzer.analyze(program))
         return 1;                      // semantic error

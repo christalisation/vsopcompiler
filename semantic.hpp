@@ -27,18 +27,6 @@ class SemanticAnalyzer {
 
         std::string filename;  // for error reporting
         
-        /**
-         * @brief Reports a semantic error with line and column information.
-         * @param line Line number where the error occurred.
-         * @param col Column number where the error occurred.
-         * @param msg The error message to be displayed.
-         */
-        void SemanticAnalyzer::error(int line, int col, const std::string& msg) {
-            std::cerr << filename << ":" << line << ":" << col
-                    << ": semantic error: " << msg << std::endl;
-            has_error = true;
-        }
-
     private:
         /**
          * PASS 1 —
@@ -116,6 +104,13 @@ class SemanticAnalyzer {
         std::map<std::string, std::map<std::string, MethodSignature>> method_table; // class -> {method -> sig}
 
         bool has_error = false;
+
+        /**
+         * @brief Reports a semantic error with line and column information.
+         * @param line Line number where the error occurred.
+         * @param col Column number where the error occurred.
+         * @param msg The error message to be displayed.
+         */
         void error(int line, int col, const std::string& msg);
         
 };
