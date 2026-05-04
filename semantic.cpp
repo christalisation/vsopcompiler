@@ -19,6 +19,7 @@ bool SemanticAnalyzer::analyze(Program* program) {
         error(0, 0, "missing class Main");
     else if (class_table["Main"] != nullptr) {
         auto& methods = method_table["Main"];
+        
         if (!methods.count("main"))
             error(0, 0, "class Main has no method main");
         else if (!methods["main"].param_types.empty())
@@ -32,26 +33,14 @@ bool SemanticAnalyzer::analyze(Program* program) {
     for (auto* c : program->classes) {
         //
         for (auto* f : c->fields) {
-            if (f->init_expr) {
-                std::map<std::string, std::string> field_scope;
-                typecheck_expr(f->init_expr, field_scope, "");
-                
-                std::map<std::string, std::string> scope;
-                scope["self"] = c->name;
-                // fields des parents aussi visibles dans les initialiseurs
-                std::string klass = c->parent;
-                while (klass != "Object" && class_table.count(klass) && class_table[klass]) {
-                    for (auto& [fname, ftype] : field_table[klass])
-                        if (!scope.count(fname))
-                            scope[fname] = ftype;
-                    klass = class_table[klass]->parent;
-                }
-                std::string t = typecheck_expr(f->init_expr, scope, c->name);
-                if (!is_subtype(t, f->type))
-                    error(f->line, f->col,
-                    "field " + f->name + " init type " + t +
-                    " not subtype of " + f->type);
-            }
+            if (!f->init_expr) continue; // no field initializer -> no need for checking
+
+            std::map<std::string, std::string> field_scope;
+            std::string t = typecheck_expr(f->init_expr, field_scope, "");
+            if (!is_subtype(t, f->type))
+                error(f->line, f->col,
+                "field " + f->name + " init type " + t +
+                " not subtype of " + f->type);
         }
         for (auto* m : c->methods) {
             std::map<std::string, std::string> scope;
@@ -127,7 +116,7 @@ void SemanticAnalyzer::check_cycles() {
                 break;
             }
             visited_classes.insert(current);
-            if (!class_table.count(class_table[current]->parent)) break;
+            // if (!class_table.count(class_table[current]->parent)) break;
             current = class_table[current]->parent;
         }
     }
@@ -170,8 +159,9 @@ void SemanticAnalyzer::collect_members(Program* p) {
         }
 
         // --- Methods ---
-        std::set<std::string> seen_formals;
         for (auto* m : c->methods) {
+            std::set<std::string> seen_formals;
+
             if (!class_table.count(m->ret_type)) {
                 error(m->line, m->col, "unknown return type " + m->ret_type);
             }
@@ -197,7 +187,6 @@ void SemanticAnalyzer::collect_members(Program* p) {
 
     // Loop 2 : check method overrides have the same signature as parent
     for (auto* c : p->classes) {
-        if (c->parent == "Object") continue;
 
         for (auto* m : c->methods) {
             // find method in parent
@@ -227,7 +216,7 @@ std::string SemanticAnalyzer::typecheck_expr(Expr* e, std::map<std::string, std:
     if (dynamic_cast<StringLiteral*>(e)) return e->inferred_type = "string";
     if (dynamic_cast<UnitLiteral*>(e))   return e->inferred_type = "unit";
 
-    // --- self ---
+    // --- variable or self ---
     if (auto* node = dynamic_cast<ObjectID*>(e)) {
         if (node->name == "self") {
             // current_class = ""
@@ -391,6 +380,8 @@ std::string SemanticAnalyzer::typecheck_expr(Expr* e, std::map<std::string, std:
         return e->inferred_type = "__error__";
     }
 
+    // Should never reach here: unhandled AST node type
+    error(e->line, e->col, "internal error: unhandled expression type");
     return e->inferred_type = "__error__";
 }
 
@@ -431,5 +422,7 @@ std::string SemanticAnalyzer::lca(const std::string& l_type, const std::string& 
         if (current == "Object" || !class_table.count(current) || class_table[current] == nullptr) break;
         current = class_table[current]->parent;
     }
+
+    // Should never reach here ("Object" pushed in l_ancestors)
     return "Object"; 
 }
