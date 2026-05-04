@@ -23,6 +23,8 @@ bool SemanticAnalyzer::analyze(Program* program) {
             error(0, 0, "class Main has no method main");
         else if (!methods["main"].param_types.empty())
             error(0, 0, "method main must take no arguments");
+        else if (methods["main"].return_type != "int32")
+            error(0, 0, "method main must have return type int32");
     }
     if (has_error) return false;
 
@@ -31,19 +33,22 @@ bool SemanticAnalyzer::analyze(Program* program) {
         //
         for (auto* f : c->fields) {
             if (f->init_expr) {
-            std::map<std::string, std::string> scope;
-            scope["self"] = c->name;
-            // fields des parents aussi visibles dans les initialiseurs
-            std::string klass = c->name;
-            while (klass != "Object" && class_table.count(klass) && class_table[klass]) {
-                for (auto& [fname, ftype] : field_table[klass])
-                    if (!scope.count(fname))
-                        scope[fname] = ftype;
-                klass = class_table[klass]->parent;
-            }
-            std::string t = typecheck_expr(f->init_expr, scope, c->name);
-            if (!is_subtype(t, f->type))
-                error(f->line, f->col,
+                std::map<std::string, std::string> field_scope;
+                typecheck_expr(f->init_expr, field_scope, "");
+                
+                std::map<std::string, std::string> scope;
+                scope["self"] = c->name;
+                // fields des parents aussi visibles dans les initialiseurs
+                std::string klass = c->parent;
+                while (klass != "Object" && class_table.count(klass) && class_table[klass]) {
+                    for (auto& [fname, ftype] : field_table[klass])
+                        if (!scope.count(fname))
+                            scope[fname] = ftype;
+                    klass = class_table[klass]->parent;
+                }
+                std::string t = typecheck_expr(f->init_expr, scope, c->name);
+                if (!is_subtype(t, f->type))
+                    error(f->line, f->col,
                     "field " + f->name + " init type " + t +
                     " not subtype of " + f->type);
             }
@@ -60,7 +65,11 @@ bool SemanticAnalyzer::analyze(Program* program) {
             }
             for (auto* f : m->formals)
                 scope[f->name] = f->type;   // shadowing formals > fields OK en VSOP
-            typecheck_expr(m->block, scope, c->name);
+            std::string body_type = typecheck_expr(m->block, scope, c->name);
+            if (!is_subtype(body_type, m->ret_type))
+                error(m->line, m->col,
+                    "method " + m->name + " body type " + body_type +
+                    " not subtype of declared return type " + m->ret_type);
         }
     }
 
@@ -141,6 +150,17 @@ void SemanticAnalyzer::collect_members(Program* p) {
             if (!class_table.count(field->type)) {
                 error(field->line, field->col, "unknown type " + field->type);
             }
+            // verify repetition of field names
+            std::string ancestor = c->parent;
+            while (ancestor != "Object" && class_table.count(ancestor) && class_table[ancestor]) {
+                if (field_table[ancestor].count(field->name)) {
+                    error(field->line, field->col,
+                          "redefinition of field " + field->name +
+                          " (first defined in parent class " + ancestor + ")");
+                    break;
+                }
+                ancestor = class_table[ancestor]->parent;
+            }
             if (field_table[c->name].count(field->name)) {
                 error(field->line, field->col, "field " + field->name + " already defined");
             } else {
@@ -150,6 +170,7 @@ void SemanticAnalyzer::collect_members(Program* p) {
         }
 
         // --- Methods ---
+        std::set<std::string> seen_formals;
         for (auto* m : c->methods) {
             if (!class_table.count(m->ret_type)) {
                 error(m->line, m->col, "unknown return type " + m->ret_type);
@@ -160,9 +181,17 @@ void SemanticAnalyzer::collect_members(Program* p) {
                 if (!class_table.count(formal->type)) {
                     error(formal->line, formal->col, "unknown type " + formal->type);
                 }
+                if (seen_formals.count(formal->name)) {
+                    error(formal->line, formal->col, "redefinition of argument " + formal->name);
+                }
+                seen_formals.insert(formal->name);
                 s.param_types.push_back(formal->type);
             }
-            method_table[c->name][m->name] = s;
+            // check for repetition of method names in the same class (overriding checked later)
+            if (method_table[c->name].count(m->name))
+                error(m->line, m->col, "redefinition of method " + m->name);
+            else
+                method_table[c->name][m->name] = s;
         }
     }
 
@@ -200,7 +229,14 @@ std::string SemanticAnalyzer::typecheck_expr(Expr* e, std::map<std::string, std:
 
     // --- self ---
     if (auto* node = dynamic_cast<ObjectID*>(e)) {
-        if (node->name == "self") return e->inferred_type = current_class;
+        if (node->name == "self") {
+            // current_class = ""
+            if (current_class.empty()) {
+                error(e->line, e->col, "cannot use self in field initializer");
+                return e->inferred_type = "__error__";
+            }
+            return e->inferred_type = current_class;
+        }
         if (scope.count(node->name)) return e->inferred_type = scope[node->name];
         error(e->line, e->col, "unbound variable " + node->name);
         return e->inferred_type = "__error__";
@@ -322,6 +358,14 @@ std::string SemanticAnalyzer::typecheck_expr(Expr* e, std::map<std::string, std:
         std::string recv = node->obj_expr
             ? typecheck_expr(node->obj_expr, scope, current_class)
             : current_class;  // pas d'objet -> appel sur self implicite
+        if (recv.empty()) {
+            error(e->line, e->col, "cannot use self in field initializer");
+            // typecheck all args anyway for error reporting
+            for (auto* arg : node->expr_list)
+                typecheck_expr(arg, scope, current_class);
+            return e->inferred_type = "__error__";
+        }
+        node->receiver_type = recv;
         // Chercher la méthode dans recv et ses parents
         std::string klass = recv;
         while (true) {
@@ -367,6 +411,10 @@ std::string SemanticAnalyzer::lca(const std::string& l_type, const std::string& 
     if (l_type == r_type) return l_type;
     if (l_type == "__error__") return r_type;
     if (r_type == "__error__") return l_type;
+
+    bool l_prim = (l_type=="int32"||l_type=="bool"||l_type=="string"||l_type=="unit");
+    bool r_prim = (r_type=="int32"||r_type=="bool"||r_type=="string"||r_type=="unit");
+    if (l_prim || r_prim) return "unit"; // incompatible primitives -> common ancestor = unit
     // Collecter les ancêtres de l_type
     std::vector<std::string> l_ancestors;
     std::string current = l_type;
@@ -383,5 +431,5 @@ std::string SemanticAnalyzer::lca(const std::string& l_type, const std::string& 
         if (current == "Object" || !class_table.count(current) || class_table[current] == nullptr) break;
         current = class_table[current]->parent;
     }
-    return "Object";
+    return "Object"; 
 }

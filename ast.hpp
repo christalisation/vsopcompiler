@@ -158,10 +158,18 @@ struct BinaryOp : Expr
 struct Call : Expr
 {
     Expr* obj_expr;
+    std::string receiver_type;
     std::string method_name;
     std::vector<Expr*> expr_list;
     std::string toString() const override {
-        std::string obj = obj_expr ? obj_expr->toString() : "self : " + inferred_type;
+        std::string obj;
+        if (obj_expr) {
+            obj = obj_expr->toString();
+        } else if (!receiver_type.empty()) {
+            obj = "self : " + receiver_type;
+        } else {
+            obj = "self";
+        }
         return annotated("Call(" + obj + ", " 
                 + method_name + ", "
                 + vecToString(expr_list)
