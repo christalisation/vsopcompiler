@@ -233,16 +233,12 @@ struct ClassDecl : ASTNode
     std::vector<Field*> fields;
     std::vector<Method*> methods; 
     std::string toString() const override{
+        // Normally parent should never be empty (at least "Object" by the parser)
         return "Class(" + name + ", " + 
                     (parent.empty() ? "Object" : parent) + ", "
                     + vecToString(fields) + ",\n   "
                     + vecToString(methods) + ")";
     }
-};
-
-struct FormalList : ASTNode
-{
-    std::vector<Formal*> formals;
 };
 
 struct Formal : ASTNode

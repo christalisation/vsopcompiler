@@ -19,7 +19,7 @@ bool SemanticAnalyzer::analyze(Program* program) {
         error(0, 0, "missing class Main");
     else if (class_table["Main"] != nullptr) {
         auto& methods = method_table["Main"];
-        
+
         if (!methods.count("main"))
             error(0, 0, "class Main has no method main");
         else if (!methods["main"].param_types.empty())
@@ -153,7 +153,7 @@ void SemanticAnalyzer::collect_members(Program* p) {
             if (field_table[c->name].count(field->name)) {
                 error(field->line, field->col, "field " + field->name + " already defined");
             } else {
-                // infer a type
+                // register declared field type in the current class field table
                 field_table[c->name][field->name] = field->type;
             }
         }
@@ -185,7 +185,7 @@ void SemanticAnalyzer::collect_members(Program* p) {
         }
     }
 
-    // Loop 2 : check method overrides have the same signature as parent
+    // Loop 2 : check method overrides have matching signature with their parent
     for (auto* c : p->classes) {
 
         for (auto* m : c->methods) {
@@ -219,7 +219,6 @@ std::string SemanticAnalyzer::typecheck_expr(Expr* e, std::map<std::string, std:
     // --- variable or self ---
     if (auto* node = dynamic_cast<ObjectID*>(e)) {
         if (node->name == "self") {
-            // current_class = ""
             if (current_class.empty()) {
                 error(e->line, e->col, "cannot use self in field initializer");
                 return e->inferred_type = "__error__";
